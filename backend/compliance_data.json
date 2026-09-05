@@ -1,0 +1,970 @@
+[
+  {
+    "id": "C001",
+    "name": "GST Registration",
+    "category": "Tax",
+    "description": "Mandatory registration under the Central Goods and Services Tax Act once turnover crosses the threshold for the state/supply category.",
+    "condition_groups": [
+      {
+        "state": [
+          "Tamil Nadu"
+        ],
+        "min_turnover_lakhs": 40,
+        "business_type": [
+          "Manufacturing"
+        ]
+      },
+      {
+        "state": [
+          "Tamil Nadu"
+        ],
+        "min_turnover_lakhs": 20,
+        "business_type": [
+          "Service",
+          "Trading"
+        ]
+      }
+    ],
+    "frequency": "One-time (then ongoing monthly/quarterly returns)",
+    "authority": "Central Board of Indirect Taxes and Customs (CBIC) / GST Network",
+    "documents": [
+      "PAN",
+      "Aadhaar",
+      "Proof of business address",
+      "Bank account details",
+      "Business constitution proof"
+    ],
+    "source": "https://www.gst.gov.in",
+    "registration_steps": [
+      {
+        "title": "Visit the GST Portal",
+        "description": "Go to www.gst.gov.in and click 'Register Now' under Taxpayers."
+      },
+      {
+        "title": "Complete Part A",
+        "description": "Enter PAN, mobile number and email; verify both with OTP to receive a Temporary Reference Number (TRN)."
+      },
+      {
+        "title": "Complete Part B",
+        "description": "Log in with the TRN and submit promoter details, principal place of business, and bank account information."
+      },
+      {
+        "title": "Upload documents",
+        "description": "Attach PAN, address proof, photographs, and authorization forms (board resolution/letter of authorization)."
+      },
+      {
+        "title": "Verify and submit",
+        "description": "Submit using DSC, e-sign, or EVC (OTP). Track status with the ARN issued; GSTIN and certificate typically arrive within 7 working days."
+      }
+    ]
+  },
+  {
+    "id": "C002",
+    "name": "Udyam (MSME) Registration",
+    "category": "Registration",
+    "description": "Official recognition as a Micro, Small or Medium Enterprise under the MSMED Act, required to access MSME schemes, credit guarantees and the 45-day payment protection.",
+    "condition_groups": [
+      {
+        "max_turnover_lakhs": 50000
+      }
+    ],
+    "frequency": "One-time (annual data update)",
+    "authority": "Ministry of Micro, Small and Medium Enterprises",
+    "documents": [
+      "Aadhaar",
+      "PAN",
+      "GSTIN (if applicable)",
+      "Bank details",
+      "Investment and turnover figures"
+    ],
+    "source": "https://udyamregistration.gov.in",
+    "registration_steps": [
+      {
+        "title": "Visit the official portal",
+        "description": "Go directly to udyamregistration.gov.in. Registration is completely free \u2014 avoid third-party sites that charge fees."
+      },
+      {
+        "title": "Authenticate Aadhaar",
+        "description": "Click 'For New Entrepreneurs'. Enter your Aadhaar number and validate it using the OTP sent to your linked mobile."
+      },
+      {
+        "title": "Verify PAN",
+        "description": "Select your organization type and enter the corresponding PAN to validate it automatically against the income tax database."
+      },
+      {
+        "title": "Enter business details",
+        "description": "Fill in business name, operating address, bank details, NIC code, and employee count."
+      },
+      {
+        "title": "Submit and generate certificate",
+        "description": "Complete the self-declaration and submit with a final OTP to receive your Udyam Registration Certificate immediately."
+      }
+    ]
+  },
+  {
+    "id": "C003",
+    "name": "Factory License (Factories Act, 1948 / TN Factories Rules, 1950)",
+    "category": "Labour & Safety",
+    "description": "Registration and license required for any premises where a manufacturing process is carried out with the stated worker counts.",
+    "condition_groups": [
+      {
+        "business_type": [
+          "Manufacturing"
+        ],
+        "state": [
+          "Tamil Nadu"
+        ],
+        "uses_power": true,
+        "min_employees": 10
+      },
+      {
+        "business_type": [
+          "Manufacturing"
+        ],
+        "state": [
+          "Tamil Nadu"
+        ],
+        "uses_power": false,
+        "min_employees": 20
+      }
+    ],
+    "frequency": "One-time registration, annual license renewal",
+    "authority": "Directorate of Industrial Safety and Health (DISH), Tamil Nadu",
+    "documents": [
+      "Site plan",
+      "Proof of premises",
+      "List of machinery",
+      "Manager details",
+      "Udyam certificate"
+    ],
+    "source": "https://dish.tn.gov.in",
+    "registration_steps": [
+      {
+        "title": "Apply on the TN DISH portal",
+        "description": "Register on the Directorate of Industrial Safety and Health portal and submit Form 1 for factory registration."
+      },
+      {
+        "title": "Submit site and machinery details",
+        "description": "Upload the site plan, list of machinery, and details of the occupier/manager."
+      },
+      {
+        "title": "Pay the prescribed fee",
+        "description": "Fee is calculated based on number of workers and installed horsepower of machinery."
+      },
+      {
+        "title": "Site inspection",
+        "description": "A Factory Inspector schedules and conducts a physical inspection of the premises."
+      },
+      {
+        "title": "Receive the Factory License",
+        "description": "On approval, the license (Form 4) is issued, valid till the following December and renewable annually."
+      }
+    ]
+  },
+  {
+    "id": "C004",
+    "name": "EPF Registration (Employees' Provident Fund)",
+    "category": "Labour",
+    "description": "Mandatory provident fund registration once an establishment reaches 20 employees, applicable across all sectors and states.",
+    "condition_groups": [
+      {
+        "min_employees": 20
+      }
+    ],
+    "frequency": "One-time registration, monthly contribution/ECR filing",
+    "authority": "Employees' Provident Fund Organisation (EPFO)",
+    "documents": [
+      "PAN",
+      "Certificate of incorporation",
+      "Employee details",
+      "Bank account",
+      "Digital signature"
+    ],
+    "source": "https://www.epfindia.gov.in",
+    "registration_steps": [
+      {
+        "title": "Visit the EPFO Employer Portal",
+        "description": "Go to unifiedportal-emp.epfindia.gov.in and register as a new employer using PAN."
+      },
+      {
+        "title": "Verify with OTP",
+        "description": "A Temporary User ID and password are issued after mobile/email OTP verification."
+      },
+      {
+        "title": "Fill employer details",
+        "description": "Enter business type, address, bank account, and attach a Digital Signature Certificate (DSC)."
+      },
+      {
+        "title": "Upload documents",
+        "description": "PAN, incorporation certificate, address proof, and a cancelled cheque."
+      },
+      {
+        "title": "Get the PF Code and onboard employees",
+        "description": "On approval you receive the Establishment Code; then register each employee for a UAN and start monthly ECR filing."
+      }
+    ]
+  },
+  {
+    "id": "C005",
+    "name": "ESI Registration (Employees' State Insurance)",
+    "category": "Labour",
+    "description": "Health-insurance scheme registration mandatory once an establishment (in a notified ESI area) reaches 10 or more employees, for employees earning up to Rs 21,000/month.",
+    "condition_groups": [
+      {
+        "min_employees": 10
+      }
+    ],
+    "frequency": "One-time registration, monthly contribution filing",
+    "authority": "Employees' State Insurance Corporation (ESIC)",
+    "documents": [
+      "PAN",
+      "Certificate of incorporation",
+      "Employee wage details",
+      "Bank account"
+    ],
+    "source": "https://www.esic.gov.in",
+    "registration_steps": [
+      {
+        "title": "Visit the ESIC portal",
+        "description": "Go to esic.gov.in, click 'Employer Login' then 'Sign Up' to start registration."
+      },
+      {
+        "title": "Fill the Employer Registration Form",
+        "description": "Form 1 requires company details and employee wage information."
+      },
+      {
+        "title": "Upload documents",
+        "description": "PAN, address proof, employee list with wages, and bank details."
+      },
+      {
+        "title": "Pay advance contribution",
+        "description": "Make the initial contribution payment online as computed by the portal."
+      },
+      {
+        "title": "Receive registration number",
+        "description": "You get a 17-digit registration number; file monthly ESI contributions through the same portal thereafter."
+      }
+    ]
+  },
+  {
+    "id": "C006",
+    "name": "Professional Tax Registration",
+    "category": "Tax",
+    "description": "State tax on employment/trade; employers in Tamil Nadu must register and deduct professional tax from employee salaries.",
+    "condition_groups": [
+      {
+        "state": [
+          "Tamil Nadu"
+        ],
+        "min_employees": 1
+      }
+    ],
+    "frequency": "One-time registration, half-yearly payment",
+    "authority": "Greater Chennai Corporation / respective local body (Commercial Taxes Dept.)",
+    "documents": [
+      "PAN",
+      "Certificate of incorporation",
+      "Employee salary details"
+    ],
+    "source": "https://www.chennaicorporation.gov.in",
+    "registration_steps": [
+      {
+        "title": "Visit the local body / commercial taxes portal",
+        "description": "e.g. Greater Chennai Corporation's e-services, or your municipality's professional tax portal."
+      },
+      {
+        "title": "Select new registration",
+        "description": "Choose 'Professional Tax Registration' for employers under the e-services menu."
+      },
+      {
+        "title": "Enter business and salary details",
+        "description": "Provide employee count and salary slabs to compute the applicable half-yearly tax."
+      },
+      {
+        "title": "Upload proof",
+        "description": "Business address proof and PAN of the establishment."
+      },
+      {
+        "title": "Pay and download certificate",
+        "description": "Pay the half-yearly tax online and download the registration certificate for your records."
+      }
+    ]
+  },
+  {
+    "id": "C007",
+    "name": "Tamil Nadu Shops and Establishments Act Registration",
+    "category": "Labour",
+    "description": "Registration required for commercial establishments (offices, shops, service/trading businesses) not covered under the Factories Act.",
+    "condition_groups": [
+      {
+        "state": [
+          "Tamil Nadu"
+        ],
+        "business_type": [
+          "Service",
+          "Trading"
+        ],
+        "min_employees": 1
+      }
+    ],
+    "frequency": "One-time registration, periodic renewal",
+    "authority": "Department of Labour, Tamil Nadu",
+    "documents": [
+      "Proof of premises",
+      "Identity proof of owner",
+      "Employee details"
+    ],
+    "source": "https://labour.tn.gov.in",
+    "registration_steps": [
+      {
+        "title": "Visit the TN Labour e-services portal",
+        "description": "Go to labour.tn.gov.in and select Shops and Establishments Act registration."
+      },
+      {
+        "title": "Enter establishment details",
+        "description": "Nature of business, address, and number of employees."
+      },
+      {
+        "title": "Upload documents",
+        "description": "Proof of premises and identity proof of the owner/partners."
+      },
+      {
+        "title": "Pay the registration fee",
+        "description": "Fee varies by employee count/category of establishment."
+      },
+      {
+        "title": "Download certificate",
+        "description": "Download the Registration Certificate; renew before its validity period ends."
+      }
+    ]
+  },
+  {
+    "id": "C008",
+    "name": "TNPCB Consent to Establish (Water Act)",
+    "category": "Environmental",
+    "description": "Prior consent from the Tamil Nadu Pollution Control Board before establishing a manufacturing unit that may discharge trade effluent.",
+    "condition_groups": [
+      {
+        "business_type": [
+          "Manufacturing"
+        ],
+        "state": [
+          "Tamil Nadu"
+        ],
+        "min_employees": 1
+      }
+    ],
+    "frequency": "One-time (before construction/setup)",
+    "authority": "Tamil Nadu Pollution Control Board (TNPCB)",
+    "documents": [
+      "Site plan",
+      "Project report",
+      "Industry category (Red/Orange/Green/White)"
+    ],
+    "source": "https://tnpcb.gov.in",
+    "registration_steps": [
+      {
+        "title": "Register on OCMMS",
+        "description": "Create an Industry User ID on TNPCB's Online Consent Management & Monitoring System (ocmms.tn.gov.in)."
+      },
+      {
+        "title": "Apply for Consent to Establish",
+        "description": "Select CTE and declare your industry category (Red/Orange/Green/White) based on pollution potential."
+      },
+      {
+        "title": "Submit project details",
+        "description": "Upload the project report, site plan, and proposed pollution-control measures."
+      },
+      {
+        "title": "Pay the consent fee",
+        "description": "Fee is computed by the portal based on project investment and category."
+      },
+      {
+        "title": "Track and receive the Consent Order",
+        "description": "TNPCB verifies the application (may include a committee review) and issues a digitally signed Consent Order online."
+      }
+    ]
+  },
+  {
+    "id": "C009",
+    "name": "TNPCB Consent to Operate (Air Act)",
+    "category": "Environmental",
+    "description": "Consent required before commencing operations, covering air emissions and effluent discharge from the manufacturing process.",
+    "condition_groups": [
+      {
+        "business_type": [
+          "Manufacturing"
+        ],
+        "state": [
+          "Tamil Nadu"
+        ],
+        "min_employees": 1
+      }
+    ],
+    "frequency": "One-time, renewed periodically (typically 3-5 years)",
+    "authority": "Tamil Nadu Pollution Control Board (TNPCB)",
+    "documents": [
+      "Consent to Establish copy",
+      "Effluent/emission details",
+      "Site inspection report"
+    ],
+    "source": "https://tnpcb.gov.in",
+    "registration_steps": [
+      {
+        "title": "Log in to the same OCMMS account",
+        "description": "Use the Industry User ID created for the Consent to Establish application."
+      },
+      {
+        "title": "Apply for Consent to Operate",
+        "description": "Submit once construction/installation of pollution-control equipment is complete."
+      },
+      {
+        "title": "Submit effluent/emission details",
+        "description": "Declare discharge quantities and the control equipment installed on site."
+      },
+      {
+        "title": "Site inspection",
+        "description": "TNPCB schedules an inspection to verify the installed measures before approval."
+      },
+      {
+        "title": "Receive the CTO",
+        "description": "The digitally signed Consent to Operate is issued online, renewable periodically (typically 3\u20135 years)."
+      }
+    ]
+  },
+  {
+    "id": "C010",
+    "name": "Fire Safety NOC",
+    "category": "Safety",
+    "description": "No-Objection Certificate from the Fire and Rescue Services Department, required for factories/establishments above a minimum worker count or built-up area.",
+    "condition_groups": [
+      {
+        "min_employees": 20
+      }
+    ],
+    "frequency": "One-time, periodic renewal",
+    "authority": "Tamil Nadu Fire and Rescue Services Department",
+    "documents": [
+      "Building plan",
+      "Fire safety equipment details",
+      "Occupancy certificate"
+    ],
+    "source": "https://www.tnfrs.tn.gov.in",
+    "registration_steps": [
+      {
+        "title": "Visit the TN Fire and Rescue Services portal",
+        "description": "Apply for a Fire NOC under the relevant occupancy/building category."
+      },
+      {
+        "title": "Submit building plan",
+        "description": "Upload the approved building plan and details of fire-safety equipment installed."
+      },
+      {
+        "title": "Pay the applicable fee",
+        "description": "Fee depends on built-up area and occupancy category."
+      },
+      {
+        "title": "Site inspection",
+        "description": "The department schedules a physical inspection of fire-safety arrangements."
+      },
+      {
+        "title": "Receive the NOC",
+        "description": "Certificate is issued on satisfactory inspection; renew before expiry."
+      }
+    ]
+  },
+  {
+    "id": "C011",
+    "name": "Contract Labour (Regulation & Abolition) Act Registration",
+    "category": "Labour",
+    "description": "Principal employer registration required where 20 or more workers are (or are likely to be) employed as contract labour.",
+    "condition_groups": [
+      {
+        "min_employees": 20
+      }
+    ],
+    "frequency": "One-time registration, annual return",
+    "authority": "Department of Labour, Tamil Nadu",
+    "documents": [
+      "Details of contractors",
+      "Nature of work",
+      "Number of contract workers"
+    ],
+    "source": "https://labour.tn.gov.in",
+    "registration_steps": [
+      {
+        "title": "Visit the TN Labour e-services portal",
+        "description": "Select Principal Employer Registration under the Contract Labour (Regulation & Abolition) Act."
+      },
+      {
+        "title": "Declare contractor details",
+        "description": "Submit the nature and expected duration of work involving contract labour."
+      },
+      {
+        "title": "Upload documents",
+        "description": "Business proof and details of the contractor(s) engaged."
+      },
+      {
+        "title": "Pay the registration fee",
+        "description": "Fee is based on the number of contract workers covered."
+      },
+      {
+        "title": "Receive Registration Certificate (Form I)",
+        "description": "Keep it displayed and renew as required when contractor arrangements change."
+      }
+    ]
+  },
+  {
+    "id": "C012",
+    "name": "Payment of Bonus Act Compliance",
+    "category": "Labour",
+    "description": "Establishments employing 20 or more persons must pay statutory annual bonus to eligible employees.",
+    "condition_groups": [
+      {
+        "min_employees": 20
+      }
+    ],
+    "frequency": "Annual",
+    "authority": "Department of Labour (Central/State)",
+    "documents": [
+      "Employee wage register",
+      "Bonus computation register"
+    ],
+    "source": "https://labour.gov.in",
+    "registration_steps": [
+      {
+        "title": "Maintain bonus records",
+        "description": "Keep wage and bonus registers as required under the Payment of Bonus Rules."
+      },
+      {
+        "title": "Compute allocable surplus",
+        "description": "Calculate the allocable surplus for the financial year per the Act's formula."
+      },
+      {
+        "title": "Pay statutory bonus",
+        "description": "Disburse bonus to eligible employees within 8 months of the financial year end."
+      },
+      {
+        "title": "File the Annual Return",
+        "description": "Submit Form D to the labour department after payment."
+      },
+      {
+        "title": "Retain records",
+        "description": "Keep registers available for inspection by labour authorities."
+      }
+    ]
+  },
+  {
+    "id": "C013",
+    "name": "Maternity Benefit Act Compliance",
+    "category": "Labour",
+    "description": "Applicable to establishments employing 10 or more persons; mandates paid maternity leave and related benefits for women employees.",
+    "condition_groups": [
+      {
+        "min_employees": 10
+      }
+    ],
+    "frequency": "Ongoing",
+    "authority": "Department of Labour",
+    "documents": [
+      "Employee records",
+      "Leave register"
+    ],
+    "source": "https://labour.gov.in",
+    "registration_steps": [
+      {
+        "title": "Maintain leave records",
+        "description": "Track maternity leave in a muster roll/leave register for women employees."
+      },
+      {
+        "title": "Communicate the policy",
+        "description": "Share the maternity benefit policy in writing during onboarding."
+      },
+      {
+        "title": "Grant statutory leave & facilities",
+        "description": "Provide 26 weeks of paid leave and a cr\u00e8che facility if the establishment has 50+ employees."
+      },
+      {
+        "title": "File the Annual Return",
+        "description": "Submit the return required under the Act to the labour department."
+      },
+      {
+        "title": "Display the Act's abstract",
+        "description": "Post an abstract of the Maternity Benefit Act at the workplace, as mandated."
+      }
+    ]
+  },
+  {
+    "id": "C014",
+    "name": "Internal Committee under the POSH Act",
+    "category": "Labour",
+    "description": "Employers with 10 or more employees must constitute an Internal Committee to address workplace sexual-harassment complaints.",
+    "condition_groups": [
+      {
+        "min_employees": 10
+      }
+    ],
+    "frequency": "One-time constitution, annual report",
+    "authority": "Ministry of Women and Child Development",
+    "documents": [
+      "Committee composition",
+      "Policy document"
+    ],
+    "source": "https://wcd.nic.in",
+    "registration_steps": [
+      {
+        "title": "Constitute the Internal Committee",
+        "description": "Appoint a Presiding Officer, employee members, and one external member per POSH Act requirements."
+      },
+      {
+        "title": "Draft and circulate a POSH policy",
+        "description": "Share the policy and complaint procedure with all employees."
+      },
+      {
+        "title": "Conduct awareness sessions",
+        "description": "Run periodic training so employees know the committee and process."
+      },
+      {
+        "title": "Handle complaints per the Act's timelines",
+        "description": "Investigate and resolve complaints within the statutory 90-day window."
+      },
+      {
+        "title": "File the Annual Report",
+        "description": "Submit the Internal Committee's annual report to the District Officer by 31 January."
+      }
+    ]
+  },
+  {
+    "id": "C015",
+    "name": "Minimum Wages Act Compliance",
+    "category": "Labour",
+    "description": "All employers must pay at least the state-notified minimum wage for the relevant scheduled employment category.",
+    "condition_groups": [
+      {
+        "min_employees": 1
+      }
+    ],
+    "frequency": "Ongoing, wages revised periodically",
+    "authority": "Department of Labour, Tamil Nadu",
+    "documents": [
+      "Wage register",
+      "Employee attendance records"
+    ],
+    "source": "https://labour.tn.gov.in",
+    "registration_steps": [
+      {
+        "title": "Check the current wage notification",
+        "description": "Look up the minimum wage for your scheduled employment on labour.tn.gov.in."
+      },
+      {
+        "title": "Align your wage structure",
+        "description": "Ensure pay meets or exceeds the notified rate for each employee category."
+      },
+      {
+        "title": "Maintain wage registers",
+        "description": "Keep Form X wage registers and issue pay slips."
+      },
+      {
+        "title": "Display the notification",
+        "description": "Post the current minimum wage notification at the workplace."
+      },
+      {
+        "title": "Track revisions",
+        "description": "Update pay when the government issues a revised notification (typically every two years)."
+      }
+    ]
+  },
+  {
+    "id": "C016",
+    "name": "Trade License (Local Body)",
+    "category": "Registration",
+    "description": "License from the local municipal body/corporation required to operate any business premises.",
+    "condition_groups": [
+      {
+        "min_employees": 1
+      }
+    ],
+    "frequency": "One-time, annual renewal",
+    "authority": "Greater Chennai Corporation / respective Municipal Corporation",
+    "documents": [
+      "Proof of premises",
+      "Identity proof",
+      "Udyam certificate"
+    ],
+    "source": "https://www.chennaicorporation.gov.in",
+    "registration_steps": [
+      {
+        "title": "Visit your local body's e-services portal",
+        "description": "e.g. Greater Chennai Corporation's Online Civic Services for a new Trade License."
+      },
+      {
+        "title": "Enter business details",
+        "description": "Business category, premises address, and constitution."
+      },
+      {
+        "title": "Upload ownership/rental proof",
+        "description": "Along with your Udyam certificate if you have one."
+      },
+      {
+        "title": "Pay the license fee",
+        "description": "Fee depends on business category and premises size."
+      },
+      {
+        "title": "Download the certificate",
+        "description": "Renew annually before expiry."
+      }
+    ]
+  },
+  {
+    "id": "C017",
+    "name": "Legal Metrology (Weights & Measures) Registration",
+    "category": "Registration",
+    "description": "Registration required for manufacturing units using weighing/measuring instruments in production or packaging.",
+    "condition_groups": [
+      {
+        "business_type": [
+          "Manufacturing"
+        ],
+        "min_employees": 1
+      }
+    ],
+    "frequency": "One-time, periodic verification",
+    "authority": "Legal Metrology Department, Tamil Nadu",
+    "documents": [
+      "List of weighing/measuring instruments",
+      "Premises proof"
+    ],
+    "source": "https://cms.tn.gov.in/legalmetrology",
+    "registration_steps": [
+      {
+        "title": "Contact the TN Legal Metrology Department",
+        "description": "Via the district office or the department's online portal for manufacturer/dealer registration."
+      },
+      {
+        "title": "List your instruments",
+        "description": "Submit the weighing/measuring instruments used, with their capacity and accuracy class."
+      },
+      {
+        "title": "Pay the verification fee",
+        "description": "Fee is based on the number and type of instruments."
+      },
+      {
+        "title": "Instrument stamping",
+        "description": "An Inspector of Legal Metrology verifies and stamps each instrument."
+      },
+      {
+        "title": "Periodic re-verification",
+        "description": "Instruments must be re-verified and re-stamped at intervals set by the department."
+      }
+    ]
+  },
+  {
+    "id": "C018",
+    "name": "TAN Registration and TDS Compliance",
+    "category": "Tax",
+    "description": "Employers must obtain a Tax Deduction Account Number and deduct/deposit TDS on salaries and eligible payments.",
+    "condition_groups": [
+      {
+        "min_employees": 1
+      }
+    ],
+    "frequency": "One-time TAN, monthly/quarterly TDS filing",
+    "authority": "Income Tax Department",
+    "documents": [
+      "PAN",
+      "Business registration proof"
+    ],
+    "source": "https://www.incometax.gov.in",
+    "registration_steps": [
+      {
+        "title": "Apply for TAN",
+        "description": "Submit Form 49B online via the NSDL/Protean TIN portal or the Income Tax e-filing portal."
+      },
+      {
+        "title": "Receive TAN allotment",
+        "description": "TAN is issued and can be verified on the e-filing portal."
+      },
+      {
+        "title": "Register on TRACES",
+        "description": "Set up your TDS account for filing and reconciliation."
+      },
+      {
+        "title": "Deduct TDS",
+        "description": "Deduct tax at source on salaries and eligible payments per applicable rates."
+      },
+      {
+        "title": "File quarterly returns",
+        "description": "Submit Form 24Q/26Q each quarter via the e-filing portal."
+      }
+    ]
+  },
+  {
+    "id": "C019",
+    "name": "Tamil Nadu Labour Welfare Fund Contribution",
+    "category": "Labour",
+    "description": "Employers with 5 or more employees must contribute to the state Labour Welfare Fund on behalf of employees.",
+    "condition_groups": [
+      {
+        "state": [
+          "Tamil Nadu"
+        ],
+        "min_employees": 5
+      }
+    ],
+    "frequency": "Annual",
+    "authority": "Tamil Nadu Labour Welfare Board",
+    "documents": [
+      "Employee list",
+      "Contribution challan"
+    ],
+    "source": "https://labour.tn.gov.in",
+    "registration_steps": [
+      {
+        "title": "Visit the TN Labour Welfare Board portal",
+        "description": "Register your establishment with total employee headcount."
+      },
+      {
+        "title": "Compute the contribution",
+        "description": "Calculate the combined employer and employee contribution as notified."
+      },
+      {
+        "title": "Pay before the due date",
+        "description": "Typically payable annually, before 31 January."
+      },
+      {
+        "title": "Use the online challan or portal payment",
+        "description": "Retain the payment receipt as compliance evidence."
+      },
+      {
+        "title": "Keep records for inspection",
+        "description": "Maintain contribution records for labour department audits."
+      }
+    ]
+  },
+  {
+    "id": "C020",
+    "name": "Employees' Compensation Insurance",
+    "category": "Labour",
+    "description": "Employers in manufacturing should maintain compensation insurance cover for workplace injury/death not covered under ESI.",
+    "condition_groups": [
+      {
+        "business_type": [
+          "Manufacturing"
+        ],
+        "min_employees": 1
+      }
+    ],
+    "frequency": "Annual policy renewal",
+    "authority": "Insurance Regulatory and Development Authority of India (IRDAI) / Insurer",
+    "documents": [
+      "Employee headcount",
+      "Wage details"
+    ],
+    "source": "https://www.irdai.gov.in",
+    "registration_steps": [
+      {
+        "title": "Approach an IRDAI-licensed insurer",
+        "description": "Directly or through their online portal for an Employees' Compensation policy quote."
+      },
+      {
+        "title": "Share employee and wage data",
+        "description": "Headcount, wage bill, and industry risk category determine the premium."
+      },
+      {
+        "title": "Compare coverage",
+        "description": "Check the policy against the Employees' Compensation Act's schedule of injuries and payouts."
+      },
+      {
+        "title": "Purchase the annual policy",
+        "description": "Pay the premium and receive the policy document."
+      },
+      {
+        "title": "Renew before expiry",
+        "description": "Keep the policy active continuously; renew ahead of the expiry date each year."
+      }
+    ]
+  },
+  {
+    "id": "C021",
+    "name": "Tamil Nadu Industrial Establishments (National & Festival Holidays) Compliance",
+    "category": "Labour",
+    "description": "Employers must grant notified national and festival holidays with wages to all employees.",
+    "condition_groups": [
+      {
+        "state": [
+          "Tamil Nadu"
+        ],
+        "min_employees": 1
+      }
+    ],
+    "frequency": "Annual",
+    "authority": "Department of Labour, Tamil Nadu",
+    "documents": [
+      "Holiday list (Form V)",
+      "Attendance register"
+    ],
+    "source": "https://labour.tn.gov.in",
+    "registration_steps": [
+      {
+        "title": "Check the annual holiday notification",
+        "description": "TN Labour Department publishes the notified national and festival holidays (Form V) each year."
+      },
+      {
+        "title": "Display the list",
+        "description": "Post it at the workplace before the calendar year begins."
+      },
+      {
+        "title": "Grant paid leave",
+        "description": "Ensure eligible employees receive paid leave on each notified day."
+      },
+      {
+        "title": "Maintain attendance records",
+        "description": "Keep records showing compliance for inspection."
+      },
+      {
+        "title": "Track revisions",
+        "description": "Update the displayed list if the department issues a revised notification."
+      }
+    ]
+  },
+  {
+    "id": "C022",
+    "name": "Income Tax Return / PAN Compliance",
+    "category": "Tax",
+    "description": "Every registered business must hold a PAN and file annual income tax returns regardless of size.",
+    "condition_groups": [
+      {
+        "min_employees": 0
+      }
+    ],
+    "frequency": "Annual",
+    "authority": "Income Tax Department",
+    "documents": [
+      "PAN",
+      "Financial statements"
+    ],
+    "source": "https://www.incometax.gov.in",
+    "registration_steps": [
+      {
+        "title": "Apply for PAN",
+        "description": "Via the NSDL/UTIITSL portal, if the business does not already hold one."
+      },
+      {
+        "title": "Maintain books of accounts",
+        "description": "As required for your business category under the Income Tax Act."
+      },
+      {
+        "title": "Get a tax audit done if applicable",
+        "description": "Required once turnover crosses the tax-audit threshold for your business type."
+      },
+      {
+        "title": "File the Income Tax Return",
+        "description": "Submit via the e-filing portal (incometax.gov.in) before the due date."
+      },
+      {
+        "title": "Retain acknowledgements",
+        "description": "Keep the ITR-V and audit report (if any) for your records."
+      }
+    ]
+  }
+]
