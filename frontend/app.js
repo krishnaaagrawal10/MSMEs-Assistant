@@ -4,7 +4,7 @@
 // ⚠️ DEPLOYMENT: this is the only line you need to change when hosting online.
 // Local dev:  "http://127.0.0.1:8000"
 // Deployed:   "https://your-backend-service.onrender.com"  (no trailing slash)
-const API_BASE = "http://127.0.0.1:8000";
+const API_BASE = "https://msmeese.onrender.com";
 
 let currentProfile = null;
 let currentResults = [];
