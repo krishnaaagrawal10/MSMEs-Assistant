@@ -5,9 +5,6 @@
 // Deployed:   "https://your-backend-service.onrender.com"  (no trailing slash)
 const API_BASE = "https://msmeese.onrender.com";
 
-let authToken = localStorage.getItem("msmease_token") || null;
-let currentUser = null;
-
 let currentProfile = null;
 let currentResults = [];
 let activeFilter = "all";
