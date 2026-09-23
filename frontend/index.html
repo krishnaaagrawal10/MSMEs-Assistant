@@ -15,17 +15,54 @@
     <span class="topbar__mark">MSMEase</span>
     <span class="topbar__tag">Compliance Assistant</span>
   </div>
-  <nav class="topbar__nav">
+  <nav class="topbar__nav" id="topbar-nav">
     <button class="navlink" data-view="landing">Home</button>
     <button class="navlink" data-view="profile">New Profile</button>
+    <button class="navlink" data-view="myprofiles">My Profiles</button>
     <button class="navlink" data-view="dashboard">Dashboard</button>
   </nav>
+  <div class="topbar__account" id="topbar-account"></div>
 </header>
 
 <main id="app">
 
+  <!-- ===================== AUTH (login / signup) ===================== -->
+  <section id="view-auth" class="view">
+    <div class="authbox">
+      <h2 id="auth-title">Log in</h2>
+      <p class="section__sub" id="auth-sub">Welcome back — log in to see your saved compliance profiles.</p>
+
+      <form id="auth-form" class="form">
+        <div class="form__row hidden" id="auth-name-row">
+          <label>Business name
+            <input type="text" name="business_name" placeholder="e.g. Sri Lakshmi Textiles">
+          </label>
+        </div>
+        <div class="form__row">
+          <label>Email
+            <input type="email" name="email" required placeholder="you@business.com">
+          </label>
+        </div>
+        <div class="form__row">
+          <label>Password
+            <input type="password" name="password" required minlength="6" placeholder="At least 6 characters">
+          </label>
+        </div>
+        <div class="form__actions">
+          <button type="submit" class="btn btn--primary" id="auth-submit">Log in</button>
+        </div>
+      </form>
+      <p id="auth-error" class="error hidden"></p>
+
+      <p class="authbox__switch">
+        <span id="auth-switch-prompt">Don't have an account?</span>
+        <button type="button" id="auth-switch-btn" class="linkbtn">Sign up</button>
+      </p>
+    </div>
+  </section>
+
   <!-- ===================== LANDING ===================== -->
-  <section id="view-landing" class="view">
+  <section id="view-landing" class="view hidden">
     <div class="hero">
       <h1>Know what your business owes the government — before it becomes a problem.</h1>
       <p class="hero__sub">
@@ -114,6 +151,14 @@
       </div>
     </form>
     <p id="profile-error" class="error hidden"></p>
+  </section>
+
+  <!-- ===================== MY PROFILES (history) ===================== -->
+  <section id="view-myprofiles" class="view hidden">
+    <h2>My Profiles</h2>
+    <p class="section__sub">Every business profile you've submitted. Click one to reopen its dashboard.</p>
+    <div id="myprofiles-list" class="results"></div>
+    <p id="myprofiles-empty" class="section__sub hidden">You haven't created a profile yet.</p>
   </section>
 
   <!-- ===================== DASHBOARD ===================== -->

@@ -1,9 +1,5 @@
 /* ===================================================================
    MSMEase — design tokens
-   Palette: warm paper ground, deep ink-indigo text, marigold accent
-   (registration/notice colour in Indian official paperwork), a verified
-   green and an attention rust for status. Slab serif headings evoke a
-   ledger/register; sans body for readability at form-field density.
    =================================================================== */
 
 :root {
@@ -57,11 +53,13 @@ h1, h2, h3 {
   background: var(--paper-raised);
 }
 .topbar__brand { display: flex; align-items: center; gap: 10px; justify-self: start; }
-.topbar__nav { display: flex; gap: 8px; justify-self: center; }
 .topbar__logo { width: 34px; height: 34px; object-fit: contain; display: block; }
 .topbar__mark { font-family: var(--font-head); font-size: 22px; font-weight: 700; color: var(--marigold-deep); align-self: baseline; }
 .topbar__tag { font-size: 13px; color: var(--ink-soft); }
-.topbar__nav { display: flex; gap: 8px; }
+.topbar__nav { display: flex; gap: 8px; justify-self: center; }
+.topbar__account { display: flex; align-items: center; gap: 12px; justify-self: end; }
+.topbar__user { font-size: 13px; color: var(--ink-soft); white-space: nowrap; }
+
 .navlink {
   background: none; border: 1px solid transparent; color: var(--ink-soft);
   font-family: var(--font-body); font-size: 14px; padding: 8px 14px;
@@ -73,6 +71,18 @@ h1, h2, h3 {
 #app { max-width: 920px; margin: 0 auto; padding: 48px 24px 96px; }
 .view { animation: fadein .25s ease; }
 @keyframes fadein { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+
+/* ---------- auth (login / signup) ---------- */
+.authbox {
+  max-width: 400px; margin: 40px auto 0; padding: 36px;
+  background: var(--paper-raised); border: 1px solid var(--line); border-radius: var(--radius);
+}
+.authbox .form { margin-top: 20px; max-width: none; }
+.authbox__switch { text-align: center; font-size: 14px; color: var(--ink-soft); margin-top: 20px; }
+.linkbtn {
+  background: none; border: none; color: var(--marigold-deep); font-family: var(--font-body);
+  font-size: 14px; font-weight: 600; cursor: pointer; padding: 0 0 0 4px; text-decoration: underline;
+}
 
 /* ---------- landing ---------- */
 .hero { max-width: 700px; }
@@ -87,6 +97,7 @@ h1, h2, h3 {
 }
 .btn--primary { background: var(--marigold); color: #fff; }
 .btn--primary:hover { background: var(--marigold-deep); }
+.btn--primary:disabled { opacity: 0.6; cursor: default; }
 
 .stepstrip {
   display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;
@@ -109,7 +120,7 @@ h1, h2, h3 {
 .form__row--split > label { flex: 1; }
 
 label { font-size: 13px; color: var(--ink-soft); display: flex; flex-direction: column; gap: 6px; }
-input[type=text], input[type=number], select {
+input[type=text], input[type=number], input[type=email], input[type=password], select {
   font-family: var(--font-body); font-size: 15px; padding: 10px 12px;
   border: 1px solid var(--line); border-radius: var(--radius); background: var(--paper-raised);
   color: var(--ink);
@@ -232,9 +243,10 @@ input:focus, select:focus { outline: 2px solid var(--marigold); outline-offset: 
 /* ---------- responsive ---------- */
 @media (max-width: 640px) {
   .topbar { grid-template-columns: 1fr; row-gap: 10px; padding: 14px 18px; }
-  .topbar__brand, .topbar__nav { justify-self: center; }
+  .topbar__brand, .topbar__nav, .topbar__account { justify-self: center; }
   #app { padding: 32px 16px 72px; }
   .stepstrip { grid-template-columns: 1fr; }
   .form__row--split { flex-direction: column; gap: 18px; }
   .dash__header { flex-direction: column; align-items: flex-start; }
+  .authbox { margin: 20px 8px 0; padding: 24px; }
 }

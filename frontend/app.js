@@ -1,15 +1,32 @@
-// MSMEase — Review 1 frontend logic.
-// Talks to the FastAPI backend (Stage 5: "Connect the form to the backend/rule engine").
+// MSMEase — frontend logic.
 
 // ⚠️ DEPLOYMENT: this is the only line you need to change when hosting online.
 // Local dev:  "http://127.0.0.1:8000"
 // Deployed:   "https://your-backend-service.onrender.com"  (no trailing slash)
-const API_BASE = "http://127.0.0.1:8000";
+const API_BASE = "https://msmeese.onrender.com";
+
+let authToken = localStorage.getItem("msmease_token") || null;
+let currentUser = null;
 
 let currentProfile = null;
 let currentResults = [];
 let activeFilter = "all";
 let activeStatusFilter = "all"; // "all" | "applicable" | "notapplicable"
+let authMode = "login"; // "login" | "signup"
+
+// ---------- fetch helper: attaches the auth header, handles 401 globally ----------
+async function apiFetch(path, options = {}) {
+  const headers = Object.assign({}, options.headers || {});
+  if (authToken) headers["Authorization"] = `Bearer ${authToken}`;
+
+  const res = await fetch(`${API_BASE}${path}`, Object.assign({}, options, { headers }));
+
+  if (res.status === 401) {
+    logout(); // session expired or invalid — send back to login
+    throw new Error("Your session expired. Please log in again.");
+  }
+  return res;
+}
 
 // ---------- view switching ----------
 function showView(name) {
@@ -18,9 +35,135 @@ function showView(name) {
 }
 
 document.querySelectorAll(".navlink").forEach(btn => {
-  btn.addEventListener("click", () => showView(btn.dataset.view));
+  btn.addEventListener("click", () => {
+    const view = btn.dataset.view;
+    if (view === "myprofiles") loadMyProfiles();
+    showView(view);
+  });
 });
 document.getElementById("landing-start").addEventListener("click", () => showView("profile"));
+
+function setLoggedInUI(isLoggedIn) {
+  document.getElementById("topbar-nav").classList.toggle("hidden", !isLoggedIn);
+  const acct = document.getElementById("topbar-account");
+  if (isLoggedIn && currentUser) {
+    acct.innerHTML = `
+      <span class="topbar__user">${currentUser.business_name}</span>
+      <button class="navlink" id="logout-btn">Log out</button>
+    `;
+    document.getElementById("logout-btn").addEventListener("click", logout);
+  } else {
+    acct.innerHTML = "";
+  }
+}
+
+function logout() {
+  authToken = null;
+  currentUser = null;
+  localStorage.removeItem("msmease_token");
+  setLoggedInUI(false);
+  showView("auth");
+}
+
+// ---------- auth form (login / signup toggle) ----------
+const authForm = document.getElementById("auth-form");
+const authError = document.getElementById("auth-error");
+const authNameRow = document.getElementById("auth-name-row");
+
+function setAuthMode(mode) {
+  authMode = mode;
+  authError.classList.add("hidden");
+  authForm.reset();
+  if (mode === "login") {
+    document.getElementById("auth-title").textContent = "Log in";
+    document.getElementById("auth-sub").textContent = "Welcome back — log in to see your saved compliance profiles.";
+    document.getElementById("auth-submit").textContent = "Log in";
+    document.getElementById("auth-switch-prompt").textContent = "Don't have an account?";
+    document.getElementById("auth-switch-btn").textContent = "Sign up";
+    authNameRow.classList.add("hidden");
+    authNameRow.querySelector("input").required = false;
+  } else {
+    document.getElementById("auth-title").textContent = "Create your account";
+    document.getElementById("auth-sub").textContent = "One account per business — your profiles stay private to you.";
+    document.getElementById("auth-submit").textContent = "Sign up";
+    document.getElementById("auth-switch-prompt").textContent = "Already have an account?";
+    document.getElementById("auth-switch-btn").textContent = "Log in";
+    authNameRow.classList.remove("hidden");
+    authNameRow.querySelector("input").required = true;
+  }
+}
+document.getElementById("auth-switch-btn").addEventListener("click", () => {
+  setAuthMode(authMode === "login" ? "signup" : "login");
+});
+
+authForm.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  authError.classList.add("hidden");
+
+  const fd = new FormData(authForm);
+  const email = fd.get("email");
+  const password = fd.get("password");
+  const business_name = fd.get("business_name");
+
+  const submitBtn = document.getElementById("auth-submit");
+  submitBtn.disabled = true;
+  submitBtn.textContent = authMode === "login" ? "Logging in..." : "Signing up...";
+
+  try {
+    const path = authMode === "login" ? "/api/auth/login" : "/api/auth/signup";
+    const body = authMode === "login"
+      ? { email, password }
+      : { email, password, business_name };
+
+    const res = await fetch(`${API_BASE}${path}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+
+    if (!res.ok) {
+      const errBody = await res.json().catch(() => ({}));
+      throw new Error(errBody.detail || "Something went wrong. Please try again.");
+    }
+
+    const data = await res.json();
+    authToken = data.access_token;
+    localStorage.setItem("msmease_token", authToken);
+
+    await loadCurrentUser();
+    setLoggedInUI(true);
+    showView("landing");
+  } catch (err) {
+    authError.textContent = err.message || "Something went wrong.";
+    authError.classList.remove("hidden");
+  } finally {
+    submitBtn.disabled = false;
+    submitBtn.textContent = authMode === "login" ? "Log in" : "Sign up";
+  }
+});
+
+async function loadCurrentUser() {
+  const res = await apiFetch("/api/auth/me");
+  if (!res.ok) throw new Error("Could not load your account.");
+  currentUser = await res.json();
+}
+
+// ---------- boot: check for an existing session ----------
+(async function boot() {
+  if (!authToken) {
+    setLoggedInUI(false);
+    setAuthMode("login");
+    showView("auth");
+    return;
+  }
+  try {
+    await loadCurrentUser();
+    setLoggedInUI(true);
+    showView("landing");
+  } catch {
+    logout();
+  }
+})();
 
 // ---------- profile form submit ----------
 const form = document.getElementById("profile-form");
@@ -49,8 +192,7 @@ form.addEventListener("submit", async (e) => {
   submitBtn.textContent = "Generating...";
 
   try {
-    // Stage 2: create the business profile record
-    const profileRes = await fetch(`${API_BASE}/api/profiles`, {
+    const profileRes = await apiFetch("/api/profiles", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
@@ -58,10 +200,7 @@ form.addEventListener("submit", async (e) => {
     if (!profileRes.ok) throw new Error("Could not save the business profile.");
     currentProfile = await profileRes.json();
 
-    // Stage 4: run the rule engine for this profile
-    const genRes = await fetch(`${API_BASE}/api/profiles/${currentProfile.id}/generate`, {
-      method: "POST",
-    });
+    const genRes = await apiFetch(`/api/profiles/${currentProfile.id}/generate`, { method: "POST" });
     if (!genRes.ok) throw new Error("Could not generate the compliance list.");
     currentResults = await genRes.json();
 
@@ -72,13 +211,68 @@ form.addEventListener("submit", async (e) => {
     form.reset();
     document.querySelector('input[name="uses_power"]').checked = true;
   } catch (err) {
-    errorEl.textContent = err.message || "Something went wrong. Is the backend running on :8000?";
+    errorEl.textContent = err.message || "Something went wrong.";
     errorEl.classList.remove("hidden");
   } finally {
     submitBtn.disabled = false;
     submitBtn.textContent = "Generate Compliance Profile";
   }
 });
+
+// ---------- My Profiles (history) ----------
+async function loadMyProfiles() {
+  const listEl = document.getElementById("myprofiles-list");
+  const emptyEl = document.getElementById("myprofiles-empty");
+  listEl.innerHTML = "";
+  emptyEl.classList.add("hidden");
+
+  try {
+    const res = await apiFetch("/api/profiles");
+    if (!res.ok) throw new Error("Could not load your profiles.");
+    const profiles = await res.json();
+
+    if (profiles.length === 0) {
+      emptyEl.classList.remove("hidden");
+      return;
+    }
+
+    listEl.innerHTML = profiles.map(p => `
+      <div class="result-row" data-profile-id="${p.id}">
+        <div class="result-row__main">
+          <div class="result-row__name">${p.business_name}</div>
+          <div class="result-row__cat">${p.industry} — ${p.business_type} — ${p.employees} employees — ₹${p.turnover_lakhs} lakh</div>
+        </div>
+        <span class="status-pill status-pill--notapplicable">Open →</span>
+      </div>
+    `).join("");
+
+    listEl.querySelectorAll(".result-row").forEach(row => {
+      row.addEventListener("click", () => openSavedProfile(row.dataset.profileId));
+    });
+  } catch (err) {
+    emptyEl.textContent = err.message || "Could not load your profiles.";
+    emptyEl.classList.remove("hidden");
+  }
+}
+
+async function openSavedProfile(profileId) {
+  try {
+    const [profileRes, resultsRes] = await Promise.all([
+      apiFetch(`/api/profiles/${profileId}`),
+      apiFetch(`/api/profiles/${profileId}/results`),
+    ]);
+    if (!profileRes.ok || !resultsRes.ok) throw new Error("Could not open this profile.");
+
+    currentProfile = await profileRes.json();
+    currentResults = await resultsRes.json();
+    activeFilter = "all";
+    activeStatusFilter = "all";
+    renderDashboard();
+    showView("dashboard");
+  } catch (err) {
+    alert(err.message || "Could not open this profile.");
+  }
+}
 
 // ---------- dashboard rendering ----------
 function statusPillClass(status) {
@@ -137,7 +331,6 @@ function renderDashboard() {
     filtered = filtered.filter(r => r.status === "Not Applicable");
   }
 
-  // Applicable items first, then not-applicable, alphabetical within group.
   const sorted = [...filtered].sort((a, b) => {
     const aApp = a.status.startsWith("Applicable") ? 0 : 1;
     const bApp = b.status.startsWith("Applicable") ? 0 : 1;
@@ -155,7 +348,7 @@ function renderDashboard() {
     </div>
   `).join("");
 
-  document.querySelectorAll(".result-row").forEach(row => {
+  document.querySelectorAll("#dash-list .result-row").forEach(row => {
     row.addEventListener("click", () => openDetail(row.dataset.ruleId));
   });
 }
