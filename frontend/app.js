@@ -1,15 +1,34 @@
 // MSMEase — frontend logic.
 
-// ⚠️ DEPLOYMENT: this is the only line you need to change when hosting online.
-// Local dev:  "http://127.0.0.1:8000"
-// Deployed:   "https://your-backend-service.onrender.com"  (no trailing slash)
-const API_BASE = "https://msmeese.onrender.com";
+// The backend address is picked automatically:
+//  - opened from localhost / 127.0.0.1 / a local file  -> your laptop's backend
+//  - anywhere else (Netlify)                           -> the Render backend
+const IS_LOCAL = ["localhost", "127.0.0.1", ""].includes(location.hostname);
+const API_BASE = IS_LOCAL ? "http://127.0.0.1:8000" : "https://msmeese.onrender.com";
+
+let authToken = localStorage.getItem("msmease_token") || null;
+let currentUser = null;
 
 let currentProfile = null;
 let currentResults = [];
 let activeFilter = "all";
 let activeStatusFilter = "all"; // "all" | "applicable" | "notapplicable"
 let authMode = "login"; // "login" | "signup"
+
+// Documents feature: give its API layer the server address, the login token
+// and what to do on an expired session. Switching it from "mock" to the real
+// backend is one setting in js/docs-config.js.
+DocsApi.configure({
+  apiBase: API_BASE,
+  getToken: () => authToken,
+  getUserId: () => (currentUser ? currentUser.id : null),
+  onUnauthorized: () => logout(),
+});
+
+// Escape user-entered text before putting it into innerHTML.
+function esc(v) {
+  return String(v ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+}
 
 // ---------- fetch helper: attaches the auth header, handles 401 globally ----------
 async function apiFetch(path, options = {}) {
@@ -19,7 +38,7 @@ async function apiFetch(path, options = {}) {
   const res = await fetch(`${API_BASE}${path}`, Object.assign({}, options, { headers }));
 
   if (res.status === 401) {
-    logout(); // session expired or invalid — send back to login
+    logout(); // session expired or invalid: back to login
     throw new Error("Your session expired. Please log in again.");
   }
   return res;
@@ -29,9 +48,12 @@ async function apiFetch(path, options = {}) {
 function showView(name) {
   document.querySelectorAll(".view").forEach(v => v.classList.add("hidden"));
   document.getElementById(`view-${name}`).classList.remove("hidden");
+  document.querySelectorAll(".navlink[data-view]").forEach(b => {
+    b.classList.toggle("active", b.dataset.view === name);
+  });
 }
 
-document.querySelectorAll(".navlink").forEach(btn => {
+document.querySelectorAll(".navlink[data-view]").forEach(btn => {
   btn.addEventListener("click", () => {
     const view = btn.dataset.view;
     if (view === "myprofiles") loadMyProfiles();
@@ -39,26 +61,33 @@ document.querySelectorAll(".navlink").forEach(btn => {
   });
 });
 document.getElementById("landing-start").addEventListener("click", () => showView("profile"));
+document.getElementById("landing-profiles").addEventListener("click", () => { loadMyProfiles(); showView("myprofiles"); });
 
 function setLoggedInUI(isLoggedIn) {
   document.getElementById("topbar-nav").classList.toggle("hidden", !isLoggedIn);
   const acct = document.getElementById("topbar-account");
   if (isLoggedIn && currentUser) {
+    const initial = esc((currentUser.business_name || "?").trim().charAt(0).toUpperCase());
     acct.innerHTML = `
-      <span class="topbar__user">${currentUser.business_name}</span>
-      <button class="navlink" id="logout-btn">Log out</button>
+      <span class="avatar" aria-hidden="true">${initial}</span>
+      <span class="topbar__user">${esc(currentUser.business_name)}</span>
+      <button class="navlink navlink--quiet" id="logout-btn">Log out</button>
     `;
     document.getElementById("logout-btn").addEventListener("click", logout);
+    document.getElementById("landing-name").textContent = currentUser.business_name;
+    DocsUI.onLogin(currentUser);
   } else {
     acct.innerHTML = "";
   }
 }
 
 function logout() {
+  DocsUI.onLogout();
   authToken = null;
   currentUser = null;
   localStorage.removeItem("msmease_token");
   setLoggedInUI(false);
+  setAuthMode("login");
   showView("auth");
 }
 
@@ -73,7 +102,7 @@ function setAuthMode(mode) {
   authForm.reset();
   if (mode === "login") {
     document.getElementById("auth-title").textContent = "Log in";
-    document.getElementById("auth-sub").textContent = "Welcome back — log in to see your saved compliance profiles.";
+    document.getElementById("auth-sub").textContent = "Welcome back. Log in to see your saved compliance profiles.";
     document.getElementById("auth-submit").textContent = "Log in";
     document.getElementById("auth-switch-prompt").textContent = "Don't have an account?";
     document.getElementById("auth-switch-btn").textContent = "Sign up";
@@ -81,7 +110,7 @@ function setAuthMode(mode) {
     authNameRow.querySelector("input").required = false;
   } else {
     document.getElementById("auth-title").textContent = "Create your account";
-    document.getElementById("auth-sub").textContent = "One account per business — your profiles stay private to you.";
+    document.getElementById("auth-sub").textContent = "One account per business. Your profiles stay private to you.";
     document.getElementById("auth-submit").textContent = "Sign up";
     document.getElementById("auth-switch-prompt").textContent = "Already have an account?";
     document.getElementById("auth-switch-btn").textContent = "Log in";
@@ -108,9 +137,7 @@ authForm.addEventListener("submit", async (e) => {
 
   try {
     const path = authMode === "login" ? "/api/auth/login" : "/api/auth/signup";
-    const body = authMode === "login"
-      ? { email, password }
-      : { email, password, business_name };
+    const body = authMode === "login" ? { email, password } : { email, password, business_name };
 
     const res = await fetch(`${API_BASE}${path}`, {
       method: "POST",
@@ -120,7 +147,8 @@ authForm.addEventListener("submit", async (e) => {
 
     if (!res.ok) {
       const errBody = await res.json().catch(() => ({}));
-      throw new Error(errBody.detail || "Something went wrong. Please try again.");
+      const detail = Array.isArray(errBody.detail) ? "Please check the details you entered." : errBody.detail;
+      throw new Error(detail || "Something went wrong. Please try again.");
     }
 
     const data = await res.json();
@@ -131,7 +159,10 @@ authForm.addEventListener("submit", async (e) => {
     setLoggedInUI(true);
     showView("landing");
   } catch (err) {
-    authError.textContent = err.message || "Something went wrong.";
+    const offline = err instanceof TypeError; // fetch() itself failed
+    authError.textContent = offline
+      ? "Can't reach the server. If it was idle, wait about a minute and try again."
+      : (err.message || "Something went wrong.");
     authError.classList.remove("hidden");
   } finally {
     submitBtn.disabled = false;
@@ -145,7 +176,83 @@ async function loadCurrentUser() {
   currentUser = await res.json();
 }
 
+// ---------- gauge + category visuals ----------
+function countStatuses(results) {
+  const registered = results.filter(r => r.status.includes("Already Registered")).length;
+  const applicable = results.filter(r => r.status.startsWith("Applicable")).length;
+  const na = results.length - applicable;
+  return { action: applicable - registered, registered, na };
+}
+
+function gaugeMarkup(c, labelText) {
+  const total = c.action + c.registered + c.na;
+  const applicable = c.action + c.registered;
+  const R = 80, L = Math.PI * R, SW = 16, GAP = 5;
+  const segs = [
+    { n: c.action, color: "var(--orange)", label: "Needs action" },
+    { n: c.registered, color: "var(--leaf)", label: "Already registered" },
+    { n: c.na, color: "var(--sky)", label: "Does not apply" },
+  ];
+  const arc = "M20 100 A80 80 0 0 1 180 100";
+  let acc = 0;
+  let arcs = "";
+  segs.forEach(s => {
+    const len = total ? (s.n / total) * L : 0;
+    if (s.n > 0) {
+      const dash = Math.max(0.01, len - GAP - SW);
+      arcs += `<path d="${arc}" fill="none" stroke="${s.color}" stroke-width="${SW}" stroke-linecap="round" ` +
+              `stroke-dasharray="${dash.toFixed(2)} ${L.toFixed(2)}" stroke-dashoffset="${(-(acc + GAP / 2 + SW / 2)).toFixed(2)}"/>`;
+    }
+    acc += len;
+  });
+
+  return `
+    <div class="gauge">
+      <svg viewBox="0 0 200 112" role="img" aria-label="${applicable} of ${total} requirements apply">
+        ${arcs}
+      </svg>
+      <div class="gauge__center">
+        <div class="gauge__num">${applicable}</div>
+        <div class="gauge__label">${esc(labelText || `of ${total} requirements apply`)}</div>
+      </div>
+    </div>
+    <ul class="legend">
+      ${segs.map(s => `<li><span class="dot" style="background:${s.color}"></span><span>${s.label}</span><b>${s.n}</b></li>`).join("")}
+    </ul>
+  `;
+}
+
+function renderSample() {
+  document.getElementById("landing-sample").innerHTML = `
+    <div class="sample__title">Example result</div>
+    <div class="sample__note">A 15-person textile unit in Tamil Nadu</div>
+    ${gaugeMarkup({ action: 12, registered: 5, na: 5 })}
+  `;
+}
+
+function categoryMarkup(results) {
+  const cats = {};
+  results.forEach(r => {
+    cats[r.category] = cats[r.category] || { total: 0, applicable: 0 };
+    cats[r.category].total += 1;
+    if (r.status.startsWith("Applicable")) cats[r.category].applicable += 1;
+  });
+  const rows = Object.entries(cats).map(([name, v]) => {
+    const pct = v.total ? Math.round((v.applicable / v.total) * 100) : 0;
+    return `
+      <div class="catrow">
+        <div class="catrow__head">
+          <span>${esc(name)}</span>
+          <span class="catrow__count"><b>${v.applicable}</b> of ${v.total} apply</span>
+        </div>
+        <div class="bar"><div class="bar__fill" style="width:${pct}%"></div></div>
+      </div>`;
+  }).join("");
+  return `<div class="cardtitle">By category</div>${rows}`;
+}
+
 // ---------- boot: check for an existing session ----------
+renderSample();
 (async function boot() {
   if (!authToken) {
     setLoggedInUI(false);
@@ -184,7 +291,7 @@ form.addEventListener("submit", async (e) => {
     factory_status: fd.get("factory_status") === "on",
   };
 
-  const submitBtn = form.querySelector("button[type=submit]");
+  const submitBtn = document.getElementById("profile-submit");
   submitBtn.disabled = true;
   submitBtn.textContent = "Generating...";
 
@@ -208,15 +315,17 @@ form.addEventListener("submit", async (e) => {
     form.reset();
     document.querySelector('input[name="uses_power"]').checked = true;
   } catch (err) {
-    errorEl.textContent = err.message || "Something went wrong.";
+    errorEl.textContent = err instanceof TypeError
+      ? "Can't reach the server. If it was idle, wait about a minute and try again."
+      : (err.message || "Something went wrong.");
     errorEl.classList.remove("hidden");
   } finally {
     submitBtn.disabled = false;
-    submitBtn.textContent = "Generate Compliance Profile";
+    submitBtn.textContent = "Generate compliance profile";
   }
 });
 
-// ---------- My Profiles (history) ----------
+// ---------- My profiles (history) ----------
 async function loadMyProfiles() {
   const listEl = document.getElementById("myprofiles-list");
   const emptyEl = document.getElementById("myprofiles-empty");
@@ -229,22 +338,26 @@ async function loadMyProfiles() {
     const profiles = await res.json();
 
     if (profiles.length === 0) {
+      emptyEl.textContent = "You haven't created a profile yet. Start with New profile.";
       emptyEl.classList.remove("hidden");
       return;
     }
 
     listEl.innerHTML = profiles.map(p => `
-      <div class="result-row" data-profile-id="${p.id}">
+      <div class="result-row" data-profile-id="${p.id}" tabindex="0" role="button">
+        <div class="result-row__tile">${esc((p.business_name || "?").trim().charAt(0).toUpperCase())}</div>
         <div class="result-row__main">
-          <div class="result-row__name">${p.business_name}</div>
-          <div class="result-row__cat">${p.industry} — ${p.business_type} — ${p.employees} employees — ₹${p.turnover_lakhs} lakh</div>
+          <div class="result-row__name">${esc(p.business_name)}</div>
+          <div class="result-row__cat">${esc(p.industry)}, ${esc(p.business_type)}, ${p.employees} employees, \u20b9${p.turnover_lakhs} lakh turnover</div>
         </div>
-        <span class="status-pill status-pill--notapplicable">Open →</span>
+        <span class="status-pill status-pill--open">Open</span>
       </div>
     `).join("");
 
     listEl.querySelectorAll(".result-row").forEach(row => {
-      row.addEventListener("click", () => openSavedProfile(row.dataset.profileId));
+      const open = () => openSavedProfile(row.dataset.profileId);
+      row.addEventListener("click", open);
+      row.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); open(); } });
     });
   } catch (err) {
     emptyEl.textContent = err.message || "Could not load your profiles.";
@@ -280,9 +393,16 @@ function statusPillClass(status) {
 
 function renderDashboard() {
   document.getElementById("dash-business-name").textContent = currentProfile.business_name;
-  document.getElementById("dash-business-meta").textContent =
-    `${currentProfile.industry} — ${currentProfile.business_type} — ${currentProfile.state} — ` +
-    `${currentProfile.employees} employees — turnover \u20b9${currentProfile.turnover_lakhs} lakh`;
+  document.getElementById("dash-business-meta").innerHTML = [
+    currentProfile.industry,
+    currentProfile.business_type,
+    currentProfile.state,
+    `${currentProfile.employees} employees`,
+    `\u20b9${currentProfile.turnover_lakhs} lakh turnover`,
+  ].map(t => `<span class="metachip">${esc(t)}</span>`).join("");
+
+  document.getElementById("dash-gauge").innerHTML = `<div class="cardtitle">What applies to you</div>${gaugeMarkup(countStatuses(currentResults))}`;
+  document.getElementById("dash-categories").innerHTML = categoryMarkup(currentResults);
 
   const applicableCount = currentResults.filter(r => r.status.startsWith("Applicable")).length;
   const notApplicableCount = currentResults.length - applicableCount;
@@ -307,8 +427,8 @@ function renderDashboard() {
 
   const categories = ["all", ...new Set(currentResults.map(r => r.category))];
   document.getElementById("dash-filters").innerHTML = categories.map(cat => `
-    <button class="filter-btn ${cat === activeFilter ? "active" : ""}" data-cat="${cat}">
-      ${cat === "all" ? "All categories" : cat}
+    <button class="filter-btn ${cat === activeFilter ? "active" : ""}" data-cat="${esc(cat)}">
+      ${cat === "all" ? "All categories" : esc(cat)}
     </button>
   `).join("");
   document.querySelectorAll(".filter-btn").forEach(btn => {
@@ -336,60 +456,76 @@ function renderDashboard() {
   });
 
   document.getElementById("dash-list").innerHTML = sorted.map(r => `
-    <div class="result-row" data-rule-id="${r.rule_id}">
+    <div class="result-row" data-rule-id="${r.rule_id}" tabindex="0" role="button">
       <div class="result-row__main">
-        <div class="result-row__name">${r.rule_name}</div>
-        <div class="result-row__cat">${r.category}</div>
+        <div class="result-row__name">${esc(r.rule_name)}</div>
+        <div class="result-row__cat">${esc(r.category)}</div>
       </div>
-      <span class="status-pill ${statusPillClass(r.status)}">${r.status}</span>
+      <span class="status-pill ${statusPillClass(r.status)}">${esc(r.status)}</span>
     </div>
   `).join("");
 
   document.querySelectorAll("#dash-list .result-row").forEach(row => {
-    row.addEventListener("click", () => openDetail(row.dataset.ruleId));
+    const open = () => openDetail(row.dataset.ruleId);
+    row.addEventListener("click", open);
+    row.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); open(); } });
   });
 }
 
 // ---------- detail modal ----------
+const CHECK_SVG = '<svg viewBox="0 0 12 12" width="12" height="12" aria-hidden="true"><path d="M2 6.5l2.5 2.5L10 3.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+
+function documentsMarkup(list) {
+  if (!list || !list.length) return "Not specified";
+  const rd = DocsUI.readiness(list);
+  const chips = rd.items.map(i =>
+    `<span class="docchip ${i.ready ? "docchip--ready" : ""}">${i.ready ? CHECK_SVG : ""}${esc(i.text)}</span>`
+  ).join("");
+  let note = "";
+  if (rd.readyCount) note = `<div class="doclist__note">${rd.readyCount} of ${rd.items.length} already in your documents.</div>`;
+  else if (rd.trackable) note = `<div class="doclist__note">Add them under New profile and we'll mark the ones you have.</div>`;
+  return `<div class="doclist">${chips}</div>${note}`;
+}
+
 function openDetail(ruleId) {
   const r = currentResults.find(x => x.rule_id === ruleId);
   if (!r) return;
 
   document.getElementById("detail-body").innerHTML = `
-    <h3>${r.rule_name}</h3>
-    <div class="modal__meta">${r.category} — <span class="status-pill ${statusPillClass(r.status)}">${r.status}</span></div>
+    <h3 id="detail-title">${esc(r.rule_name)}</h3>
+    <div class="modal__meta">${esc(r.category)} <span class="status-pill ${statusPillClass(r.status)}">${esc(r.status)}</span></div>
 
     <div class="modal__field">
       <div class="modal__field-label">Why this result</div>
-      <div class="modal__field-value">${r.explanation}</div>
+      <div class="modal__field-value">${esc(r.explanation)}</div>
     </div>
     <div class="modal__field">
       <div class="modal__field-label">Frequency</div>
-      <div class="modal__field-value">${r.frequency || "—"}</div>
+      <div class="modal__field-value">${esc(r.frequency || "Not specified")}</div>
     </div>
     <div class="modal__field">
       <div class="modal__field-label">Responsible authority</div>
-      <div class="modal__field-value">${r.authority || "—"}</div>
+      <div class="modal__field-value">${esc(r.authority || "Not specified")}</div>
     </div>
     <div class="modal__field">
       <div class="modal__field-label">Documents typically required</div>
-      <div class="modal__field-value">${(r.documents && r.documents.length) ? r.documents.join(", ") : "—"}</div>
+      <div class="modal__field-value">${documentsMarkup(r.documents)}</div>
     </div>
     <div class="modal__field">
       <div class="modal__field-label">Official source</div>
-      <div class="modal__field-value"><a href="${r.source}" target="_blank" rel="noopener">${r.source}</a></div>
+      <div class="modal__field-value"><a href="${esc(r.source)}" target="_blank" rel="noopener">${esc(r.source)}</a></div>
     </div>
 
     ${r.registration_steps && r.registration_steps.length ? `
       <div class="modal__field">
-        <div class="modal__field-label" style="margin-bottom:10px;">How to register / comply</div>
+        <div class="modal__field-label" style="margin-bottom:12px;">How to register or comply</div>
         <ol class="roadmap">
           ${r.registration_steps.map(s => `
             <li class="roadmap__step">
               <span class="roadmap__num"></span>
               <div class="roadmap__content">
-                <div class="roadmap__title">${s.title}</div>
-                <div class="roadmap__desc">${s.description}</div>
+                <div class="roadmap__title">${esc(s.title)}</div>
+                <div class="roadmap__desc">${esc(s.description)}</div>
               </div>
             </li>
           `).join("")}
@@ -398,11 +534,14 @@ function openDetail(ruleId) {
     ` : ""}
   `;
   document.getElementById("detail-backdrop").classList.remove("hidden");
+  document.getElementById("detail-close").focus();
 }
 
-document.getElementById("detail-close").addEventListener("click", () => {
+function closeDetail() {
   document.getElementById("detail-backdrop").classList.add("hidden");
-});
+}
+document.getElementById("detail-close").addEventListener("click", closeDetail);
 document.getElementById("detail-backdrop").addEventListener("click", (e) => {
-  if (e.target.id === "detail-backdrop") e.target.classList.add("hidden");
+  if (e.target.id === "detail-backdrop") closeDetail();
 });
+document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeDetail(); });

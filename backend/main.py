@@ -20,6 +20,8 @@ import schemas
 from database import engine, get_db
 from rule_engine import evaluate_profile, load_compliance_rules
 from auth import hash_password, verify_password, create_token, decode_token
+import documents_api
+doc_models = documents_api.define_models(models.Base)
 
 models.Base.metadata.create_all(bind=engine)
 
@@ -202,3 +204,8 @@ def get_results(
             "registration_steps": rule.get("registration_steps", []),
         })
     return out
+    return out          # line 206, end of get_results
+
+
+# ---------- documents + encrypted vault (OCR feature) ----------
+app.include_router(documents_api.build_router(get_db, get_current_user, doc_models))
