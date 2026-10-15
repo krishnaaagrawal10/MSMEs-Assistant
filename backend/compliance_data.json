@@ -56,7 +56,11 @@
         "title": "Verify and submit",
         "description": "Submit using DSC, e-sign, or EVC (OTP). Track status with the ARN issued; GSTIN and certificate typically arrive within 7 working days."
       }
-    ]
+    ],
+    "act_section": "Section 22, Central Goods and Services Tax Act, 2017 read with Tamil Nadu Goods and Services Tax Act, 2017",
+    "jurisdiction": "Central & State (Tamil Nadu)",
+    "last_verified_date": "2024-09-01",
+    "needs_verification": false
   },
   {
     "id": "C002",
@@ -99,7 +103,11 @@
         "title": "Submit and generate certificate",
         "description": "Complete the self-declaration and submit with a final OTP to receive your Udyam Registration Certificate immediately."
       }
-    ]
+    ],
+    "act_section": "Section 7 & 8, Micro, Small and Medium Enterprises Development Act, 2006 (MSMED Act)",
+    "jurisdiction": "Central (All India)",
+    "last_verified_date": "2024-09-01",
+    "needs_verification": false
   },
   {
     "id": "C003",
@@ -159,7 +167,11 @@
         "title": "Receive the Factory License",
         "description": "On approval, the license (Form 4) is issued, valid till the following December and renewable annually."
       }
-    ]
+    ],
+    "act_section": "Section 6, Factories Act, 1948 read with Rules 3\u201311, Tamil Nadu Factories Rules, 1950",
+    "jurisdiction": "State (Tamil Nadu)",
+    "last_verified_date": "2024-09-01",
+    "needs_verification": false
   },
   {
     "id": "C004",
@@ -202,7 +214,11 @@
         "title": "Get the PF Code and onboard employees",
         "description": "On approval you receive the Establishment Code; then register each employee for a UAN and start monthly ECR filing."
       }
-    ]
+    ],
+    "act_section": "Section 1(3) & 2A, Employees' Provident Funds and Miscellaneous Provisions Act, 1952",
+    "jurisdiction": "Central (All India)",
+    "last_verified_date": "2024-09-01",
+    "needs_verification": false
   },
   {
     "id": "C005",
@@ -244,7 +260,11 @@
         "title": "Receive registration number",
         "description": "You get a 17-digit registration number; file monthly ESI contributions through the same portal thereafter."
       }
-    ]
+    ],
+    "act_section": "Section 1(5) & 2(12), Employees' State Insurance Act, 1948",
+    "jurisdiction": "Central (All India)",
+    "last_verified_date": "2024-09-01",
+    "needs_verification": false
   },
   {
     "id": "C006",
@@ -288,7 +308,11 @@
         "title": "Pay and download certificate",
         "description": "Pay the half-yearly tax online and download the registration certificate for your records."
       }
-    ]
+    ],
+    "act_section": "Section 138B, Tamil Nadu City Municipal Corporation Act, 1981 / Tamil Nadu Panchayats Act, 1994",
+    "jurisdiction": "State & Local Body (Tamil Nadu)",
+    "last_verified_date": "2024-09-01",
+    "needs_verification": false
   },
   {
     "id": "C007",
@@ -336,7 +360,11 @@
         "title": "Download certificate",
         "description": "Download the Registration Certificate; renew before its validity period ends."
       }
-    ]
+    ],
+    "act_section": "Section 3 & 4, Tamil Nadu Shops and Establishments Act, 1947",
+    "jurisdiction": "State (Tamil Nadu)",
+    "last_verified_date": "2024-09-01",
+    "needs_verification": false
   },
   {
     "id": "C008",
@@ -383,7 +411,11 @@
         "title": "Track and receive the Consent Order",
         "description": "TNPCB verifies the application (may include a committee review) and issues a digitally signed Consent Order online."
       }
-    ]
+    ],
+    "act_section": "Section 25, Water (Prevention and Control of Pollution) Act, 1974",
+    "jurisdiction": "State (Tamil Nadu Pollution Control Board)",
+    "last_verified_date": "2024-09-01",
+    "needs_verification": false
   },
   {
     "id": "C009",
@@ -430,7 +462,11 @@
         "title": "Receive the CTO",
         "description": "The digitally signed Consent to Operate is issued online, renewable periodically (typically 3\u20135 years)."
       }
-    ]
+    ],
+    "act_section": "Section 21, Air (Prevention and Control of Pollution) Act, 1981",
+    "jurisdiction": "State (Tamil Nadu Pollution Control Board)",
+    "last_verified_date": "2024-09-01",
+    "needs_verification": false
   },
   {
     "id": "C010",
@@ -471,7 +507,11 @@
         "title": "Receive the NOC",
         "description": "Certificate is issued on satisfactory inspection; renew before expiry."
       }
-    ]
+    ],
+    "act_section": "Section 13, Tamil Nadu Fire Service Act, 1985 read with National Building Code (Part IV)",
+    "jurisdiction": "State (Tamil Nadu Fire and Rescue Services)",
+    "last_verified_date": "2024-09-01",
+    "needs_verification": false
   },
   {
     "id": "C011",
@@ -512,7 +552,11 @@
         "title": "Receive Registration Certificate (Form I)",
         "description": "Keep it displayed and renew as required when contractor arrangements change."
       }
-    ]
+    ],
+    "act_section": "Section 7, Contract Labour (Regulation and Abolition) Act, 1970 read with TN Rules, 1975",
+    "jurisdiction": "Central & State (Tamil Nadu)",
+    "last_verified_date": "2024-09-01",
+    "needs_verification": false
   },
   {
     "id": "C012",
@@ -552,7 +596,11 @@
         "title": "Retain records",
         "description": "Keep registers available for inspection by labour authorities."
       }
-    ]
+    ],
+    "act_section": "Section 1(3) & 10, Payment of Bonus Act, 1965",
+    "jurisdiction": "Central (All India)",
+    "last_verified_date": "2024-09-01",
+    "needs_verification": false
   },
   {
     "id": "C013",
@@ -592,7 +640,11 @@
         "title": "Display the Act's abstract",
         "description": "Post an abstract of the Maternity Benefit Act at the workplace, as mandated."
       }
-    ]
+    ],
+    "act_section": "Section 2 & 5, Maternity Benefit Act, 1961 (amended 2017)",
+    "jurisdiction": "Central (All India)",
+    "last_verified_date": "2024-09-01",
+    "needs_verification": false
   },
   {
     "id": "C014",
@@ -632,7 +684,11 @@
         "title": "File the Annual Report",
         "description": "Submit the Internal Committee's annual report to the District Officer by 31 January."
       }
-    ]
+    ],
+    "act_section": "Section 4, Sexual Harassment of Women at Workplace (Prevention, Prohibition and Redressal) Act, 2013",
+    "jurisdiction": "Central (All India)",
+    "last_verified_date": "2024-09-01",
+    "needs_verification": false
   },
   {
     "id": "C015",
@@ -672,7 +728,11 @@
         "title": "Track revisions",
         "description": "Update pay when the government issues a revised notification (typically every two years)."
       }
-    ]
+    ],
+    "act_section": "Section 12, Minimum Wages Act, 1948 read with Tamil Nadu Minimum Wages Rules, 1953",
+    "jurisdiction": "Central & State (Tamil Nadu)",
+    "last_verified_date": "2024-09-01",
+    "needs_verification": false
   },
   {
     "id": "C016",
@@ -713,7 +773,11 @@
         "title": "Download the certificate",
         "description": "Renew annually before expiry."
       }
-    ]
+    ],
+    "act_section": "Section 249, Tamil Nadu District Municipalities Act, 1920 / Chennai City Municipal Corporation Act, 1919",
+    "jurisdiction": "Local Body (Tamil Nadu)",
+    "last_verified_date": "2024-09-01",
+    "needs_verification": false
   },
   {
     "id": "C017",
@@ -756,7 +820,11 @@
         "title": "Periodic re-verification",
         "description": "Instruments must be re-verified and re-stamped at intervals set by the department."
       }
-    ]
+    ],
+    "act_section": "Section 19 & 27, Legal Metrology Act, 2009 read with Packaged Commodities Rules, 2011",
+    "jurisdiction": "Central & State (Tamil Nadu)",
+    "last_verified_date": "2024-09-01",
+    "needs_verification": false
   },
   {
     "id": "C018",
@@ -796,7 +864,11 @@
         "title": "File quarterly returns",
         "description": "Submit Form 24Q/26Q each quarter via the e-filing portal."
       }
-    ]
+    ],
+    "act_section": "Section 203A, Income-tax Act, 1961",
+    "jurisdiction": "Central (All India)",
+    "last_verified_date": "2024-09-01",
+    "needs_verification": false
   },
   {
     "id": "C019",
@@ -839,7 +911,11 @@
         "title": "Keep records for inspection",
         "description": "Maintain contribution records for labour department audits."
       }
-    ]
+    ],
+    "act_section": "Section 15, Tamil Nadu Labour Welfare Fund Act, 1972",
+    "jurisdiction": "State (Tamil Nadu)",
+    "last_verified_date": "2024-09-01",
+    "needs_verification": false
   },
   {
     "id": "C020",
@@ -882,7 +958,11 @@
         "title": "Renew before expiry",
         "description": "Keep the policy active continuously; renew ahead of the expiry date each year."
       }
-    ]
+    ],
+    "act_section": "Section 3, Employee's Compensation Act, 1923",
+    "jurisdiction": "Central (All India)",
+    "last_verified_date": "2024-09-01",
+    "needs_verification": false
   },
   {
     "id": "C021",
@@ -925,7 +1005,11 @@
         "title": "Track revisions",
         "description": "Update the displayed list if the department issues a revised notification."
       }
-    ]
+    ],
+    "act_section": "Section 3, Tamil Nadu Industrial Establishments (National and Festival Holidays) Act, 1958",
+    "jurisdiction": "State (Tamil Nadu)",
+    "last_verified_date": "2024-09-01",
+    "needs_verification": false
   },
   {
     "id": "C022",
@@ -965,6 +1049,10 @@
         "title": "Retain acknowledgements",
         "description": "Keep the ITR-V and audit report (if any) for your records."
       }
-    ]
+    ],
+    "act_section": "Section 139(1), Income-tax Act, 1961",
+    "jurisdiction": "Central (All India)",
+    "last_verified_date": "2024-09-01",
+    "needs_verification": false
   }
 ]

@@ -56,9 +56,20 @@ class ComplianceResult(Base):
     rule_id = Column(String, nullable=False)
     rule_name = Column(String, nullable=False)
     category = Column(String, nullable=False)
-    status = Column(String, nullable=False)
+    status = Column(String, nullable=False)  # Legacy combined status
+    applicability = Column(String, nullable=False, default="Applicable")  # Applicable, Not applicable, Needs verification
+    progress = Column(String, nullable=False, default="Action required")   # Action required, In progress, Submitted, Completed
+    due_date = Column(String, nullable=True)                              # YYYY-MM-DD
+    notes = Column(String, nullable=True)
+    evidence_doc_id = Column(String, nullable=True)                       # Link to uploaded document or note
+    reminder_date = Column(String, nullable=True)                         # YYYY-MM-DD
+    reminder_enabled = Column(Boolean, default=False)
+    act_section = Column(String, nullable=True)
+    jurisdiction = Column(String, nullable=True)
+    last_verified_date = Column(String, nullable=True)
     explanation = Column(String, nullable=False)
     source = Column(String, nullable=False)
     generated_at = Column(DateTime, default=datetime.utcnow)
 
     profile = relationship("BusinessProfile", back_populates="results")
+

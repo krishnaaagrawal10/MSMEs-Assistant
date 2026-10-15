@@ -137,6 +137,67 @@ def get_profile(
     return _get_owned_profile(profile_id, db, current_user)
 
 
+from datetime import datetime, date
+
+
+def _compute_deadline_status(progress: str, due_date: Optional[str]) -> tuple[bool, str, Optional[int]]:
+    """
+    Calculate overdue and deadline status.
+    - If progress is 'Completed', deadline is marked as 'completed' (not overdue).
+    - If due_date is missing or invalid, status is 'none'.
+    - If due_date < today and not completed, status is 'overdue' (is_overdue = True).
+    - If due_date >= today and within 30 days, status is 'due_soon'.
+    - If due_date > 30 days away, status is 'upcoming'.
+    """
+    if progress == "Completed":
+        return False, "completed", None
+    if not due_date or not due_date.strip():
+        return False, "none", None
+    try:
+        target = datetime.strptime(due_date.strip(), "%Y-%m-%d").date()
+        today = date.today()
+        delta = (target - today).days
+        if delta < 0:
+            return True, "overdue", delta
+        elif delta <= 30:
+            return False, "due_soon", delta
+        else:
+            return False, "upcoming", delta
+    except ValueError:
+        return False, "none", None
+
+
+def _format_compliance_result(row: models.ComplianceResult, catalog: dict) -> dict:
+    rule = catalog.get(row.rule_id, {})
+    is_overdue, deadline_status, days_remaining = _compute_deadline_status(row.progress, row.due_date)
+    return {
+        "rule_id": row.rule_id,
+        "rule_name": row.rule_name,
+        "category": row.category,
+        "status": row.status,
+        "applicability": row.applicability or "Applicable",
+        "progress": row.progress or "Action required",
+        "due_date": row.due_date,
+        "is_overdue": is_overdue,
+        "deadline_status": deadline_status,
+        "days_remaining": days_remaining,
+        "notes": row.notes,
+        "evidence_doc_id": row.evidence_doc_id,
+        "reminder_date": row.reminder_date,
+        "reminder_enabled": bool(row.reminder_enabled),
+        "act_section": row.act_section or rule.get("act_section"),
+        "jurisdiction": row.jurisdiction or rule.get("jurisdiction"),
+        "last_verified_date": row.last_verified_date or rule.get("last_verified_date"),
+        "needs_verification": rule.get("needs_verification", False) or (row.applicability == "Needs verification"),
+        "explanation": row.explanation,
+        "frequency": rule.get("frequency"),
+        "authority": rule.get("authority"),
+        "documents": rule.get("documents", []),
+        "source": row.source,
+        "registration_steps": rule.get("registration_steps", []),
+    }
+
+
 @app.post("/api/profiles/{profile_id}/generate", response_model=list[schemas.ComplianceResultOut])
 def generate_compliance(
     profile_id: int,
@@ -159,20 +220,52 @@ def generate_compliance(
 
     results = evaluate_profile(profile_dict)
 
-    db.query(models.ComplianceResult).filter(models.ComplianceResult.profile_id == profile_id).delete()
+    # Upsert logic: preserve any existing user customization (notes, progress, due dates, evidence, reminders)
+    existing_rows = db.query(models.ComplianceResult).filter(models.ComplianceResult.profile_id == profile_id).all()
+    existing_map = {row.rule_id: row for row in existing_rows}
+
     for r in results:
-        db.add(models.ComplianceResult(
-            profile_id=profile_id,
-            rule_id=r["rule_id"],
-            rule_name=r["rule_name"],
-            category=r["category"],
-            status=r["status"],
-            explanation=r["explanation"],
-            source=r["source"],
-        ))
+        rule_id = r["rule_id"]
+        if rule_id in existing_map:
+            row = existing_map[rule_id]
+            row.rule_name = r["rule_name"]
+            row.category = r["category"]
+            row.explanation = r["explanation"]
+            row.source = r["source"]
+            row.act_section = r.get("act_section")
+            row.jurisdiction = r.get("jurisdiction")
+            row.last_verified_date = r.get("last_verified_date")
+            row.applicability = r["applicability"]
+
+            if r["applicability"] == "Not applicable":
+                row.progress = "Not applicable"
+                row.status = "Not Applicable"
+            elif row.progress == "Not applicable":
+                row.progress = r["progress"]
+                row.status = r["status"]
+            # If already customized by user (e.g. In progress, Completed), preserve existing progress!
+        else:
+            row = models.ComplianceResult(
+                profile_id=profile_id,
+                rule_id=r["rule_id"],
+                rule_name=r["rule_name"],
+                category=r["category"],
+                status=r["status"],
+                applicability=r["applicability"],
+                progress=r["progress"],
+                explanation=r["explanation"],
+                source=r["source"],
+                act_section=r.get("act_section"),
+                jurisdiction=r.get("jurisdiction"),
+                last_verified_date=r.get("last_verified_date"),
+            )
+            db.add(row)
+
     db.commit()
 
-    return results
+    catalog = {r["id"]: r for r in load_compliance_rules()}
+    stored = db.query(models.ComplianceResult).filter(models.ComplianceResult.profile_id == profile_id).all()
+    return [_format_compliance_result(row, catalog) for row in stored]
 
 
 @app.get("/api/profiles/{profile_id}/results", response_model=list[schemas.ComplianceResultOut])
@@ -188,24 +281,77 @@ def get_results(
         raise HTTPException(status_code=404, detail="No compliance results yet — call /generate first")
 
     catalog = {r["id"]: r for r in load_compliance_rules()}
-    out = []
-    for row in stored:
-        rule = catalog.get(row.rule_id, {})
-        out.append({
-            "rule_id": row.rule_id,
-            "rule_name": row.rule_name,
-            "category": row.category,
-            "status": row.status,
-            "explanation": row.explanation,
-            "frequency": rule.get("frequency"),
-            "authority": rule.get("authority"),
-            "documents": rule.get("documents", []),
-            "source": row.source,
-            "registration_steps": rule.get("registration_steps", []),
-        })
-    return out
-    return out          # line 206, end of get_results
+    return [_format_compliance_result(row, catalog) for row in stored]
+
+
+@app.patch("/api/profiles/{profile_id}/results/{rule_id}", response_model=schemas.ComplianceResultOut)
+def update_compliance_result(
+    profile_id: int,
+    rule_id: str,
+    payload: schemas.ComplianceProgressUpdate,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+):
+    _get_owned_profile(profile_id, db, current_user)
+
+    row = (
+        db.query(models.ComplianceResult)
+        .filter(models.ComplianceResult.profile_id == profile_id, models.ComplianceResult.rule_id == rule_id)
+        .first()
+    )
+    if not row:
+        raise HTTPException(status_code=404, detail="Compliance result not found")
+
+    if payload.progress is not None:
+        valid_progress = {"Action required", "In progress", "Submitted", "Completed"}
+        if payload.progress not in valid_progress:
+            raise HTTPException(
+                status_code=422,
+                detail=f"Invalid progress status '{payload.progress}'. Must be one of {sorted(valid_progress)}"
+            )
+        row.progress = payload.progress
+        if payload.progress == "Completed":
+            row.status = "Applicable — Completed"
+        elif payload.progress == "Action required":
+            row.status = "Applicable — Action Required"
+
+    if payload.due_date is not None:
+        clean_date = payload.due_date.strip() if payload.due_date else ""
+        if clean_date:
+            try:
+                datetime.strptime(clean_date, "%Y-%m-%d")
+                row.due_date = clean_date
+            except ValueError:
+                raise HTTPException(status_code=422, detail="Invalid due_date format. Expected YYYY-MM-DD")
+        else:
+            row.due_date = None
+
+    if payload.notes is not None:
+        row.notes = payload.notes.strip() if payload.notes else None
+
+    if payload.evidence_doc_id is not None:
+        row.evidence_doc_id = payload.evidence_doc_id.strip() if payload.evidence_doc_id else None
+
+    if payload.reminder_date is not None:
+        clean_rem = payload.reminder_date.strip() if payload.reminder_date else ""
+        if clean_rem:
+            try:
+                datetime.strptime(clean_rem, "%Y-%m-%d")
+                row.reminder_date = clean_rem
+            except ValueError:
+                raise HTTPException(status_code=422, detail="Invalid reminder_date format. Expected YYYY-MM-DD")
+        else:
+            row.reminder_date = None
+
+    if payload.reminder_enabled is not None:
+        row.reminder_enabled = payload.reminder_enabled
+
+    db.commit()
+    db.refresh(row)
+
+    catalog = {r["id"]: r for r in load_compliance_rules()}
+    return _format_compliance_result(row, catalog)
 
 
 # ---------- documents + encrypted vault (OCR feature) ----------
-app.include_router(documents_api.build_router(get_db, get_current_user, doc_models))
+app.include_router(documents_api.build_router(get_db, get_current_user, doc_models))

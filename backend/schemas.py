@@ -58,14 +58,38 @@ class RegistrationStep(BaseModel):
     description: str
 
 
+class ComplianceProgressUpdate(BaseModel):
+    progress: Optional[str] = None
+    due_date: Optional[str] = None
+    notes: Optional[str] = None
+    evidence_doc_id: Optional[str] = None
+    reminder_date: Optional[str] = None
+    reminder_enabled: Optional[bool] = None
+
+
 class ComplianceResultOut(BaseModel):
     rule_id: str
     rule_name: str
     category: str
     status: str
+    applicability: str = "Applicable"
+    progress: str = "Action required"
+    due_date: Optional[str] = None
+    is_overdue: bool = False
+    deadline_status: Optional[str] = "none"  # "overdue" | "due_soon" | "upcoming" | "completed" | "none"
+    days_remaining: Optional[int] = None
+    notes: Optional[str] = None
+    evidence_doc_id: Optional[str] = None
+    reminder_date: Optional[str] = None
+    reminder_enabled: bool = False
+    act_section: Optional[str] = None
+    jurisdiction: Optional[str] = None
+    last_verified_date: Optional[str] = None
+    needs_verification: bool = False
     explanation: str
     frequency: Optional[str] = None
     authority: Optional[str] = None
     documents: Optional[list] = None
     source: str
     registration_steps: Optional[list[RegistrationStep]] = None
+

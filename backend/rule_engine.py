@@ -78,8 +78,40 @@ def _condition_group_matches(group: dict, profile: dict) -> bool:
 
 
 def _explain(rule: dict, matched_group: dict | None, profile: dict) -> str:
-    """Build a short, reviewer-readable reason for the decision."""
+    """Build a short, reviewer-readable reason for the decision using existing conditions."""
+    if rule.get("needs_verification"):
+        return f"Applicability for '{rule['name']}' requires verification against latest legal notification."
+
     if matched_group is None:
+        groups = rule.get("condition_groups", [])
+        if not groups:
+            return f"No applicability condition for '{rule['name']}' was met by this profile."
+
+        reasons = []
+        for g in groups:
+            sub = []
+            if "state" in g and profile.get("state") not in g["state"]:
+                sub.append(f"state '{profile.get('state')}' is outside {g['state']}")
+            if "business_type" in g and profile.get("business_type") not in g["business_type"]:
+                sub.append(f"business type '{profile.get('business_type')}' is not in {g['business_type']}")
+            if "min_employees" in g and (profile.get("employees") or 0) < g["min_employees"]:
+                sub.append(f"employees ({profile.get('employees') or 0}) < threshold of {g['min_employees']}")
+            if "max_employees" in g and (profile.get("employees") or 0) > g["max_employees"]:
+                sub.append(f"employees ({profile.get('employees') or 0}) > limit of {g['max_employees']}")
+            if "min_turnover_lakhs" in g and (profile.get("turnover_lakhs") or 0) < g["min_turnover_lakhs"]:
+                sub.append(f"turnover ({profile.get('turnover_lakhs') or 0} lakh) < threshold of {g['min_turnover_lakhs']} lakh")
+            if "max_turnover_lakhs" in g and (profile.get("turnover_lakhs") or 0) > g["max_turnover_lakhs"]:
+                sub.append(f"turnover ({profile.get('turnover_lakhs') or 0} lakh) > limit of {g['max_turnover_lakhs']} lakh")
+            if "uses_power" in g and bool(profile.get("uses_power")) != bool(g["uses_power"]):
+                sub.append(f"uses power = {profile.get('uses_power')} (requires {g['uses_power']})")
+            if sub:
+                reasons.append(" and ".join(sub))
+
+        if reasons:
+            if len(reasons) > 1:
+                return "Not applicable: did not meet condition (" + ") nor (".join(reasons) + ")."
+            return f"Not applicable: {reasons[0]}."
+
         return f"No applicability condition for '{rule['name']}' was met by this profile."
 
     parts = []
@@ -105,8 +137,9 @@ def evaluate_profile(profile: dict, rules: list | None = None) -> list:
     """
     Core engine entry point.
     Takes a business profile dict, returns a list of result dicts:
-    {rule_id, rule_name, category, status, explanation, frequency,
-     authority, documents, source}
+    {rule_id, rule_name, category, status, applicability, progress,
+     explanation, frequency, authority, documents, source, act_section,
+     jurisdiction, last_verified_date, needs_verification}
     """
     if rules is None:
         rules = load_compliance_rules()
@@ -122,24 +155,40 @@ def evaluate_profile(profile: dict, rules: list | None = None) -> list:
         applicable = matched_group is not None
         explanation = _explain(rule, matched_group, profile)
 
-        # Refine status using the profile's own registration flags, where tracked.
-        status = "Applicable" if applicable else "Not Applicable"
-        flag_field = REGISTRATION_FLAG_FOR_RULE.get(rule["id"])
-        if applicable and flag_field and profile.get(flag_field):
-            status = "Applicable — Already Registered"
-        elif applicable and flag_field and not profile.get(flag_field):
-            status = "Applicable — Action Required"
+        if rule.get("needs_verification"):
+            applicability = "Needs verification"
+            progress = "Action required"
+            status = "Needs Verification"
+        elif applicable:
+            applicability = "Applicable"
+            flag_field = REGISTRATION_FLAG_FOR_RULE.get(rule["id"])
+            if flag_field and profile.get(flag_field):
+                progress = "Completed"
+                status = "Applicable — Already Registered"
+            else:
+                progress = "Action required"
+                status = "Applicable — Action Required" if flag_field else "Applicable"
+        else:
+            applicability = "Not applicable"
+            progress = "Not applicable"
+            status = "Not Applicable"
 
         results.append({
             "rule_id": rule["id"],
             "rule_name": rule["name"],
             "category": rule["category"],
             "status": status,
+            "applicability": applicability,
+            "progress": progress,
             "explanation": explanation,
             "frequency": rule.get("frequency"),
             "authority": rule.get("authority"),
             "documents": rule.get("documents", []),
             "source": rule.get("source"),
+            "act_section": rule.get("act_section"),
+            "jurisdiction": rule.get("jurisdiction"),
+            "last_verified_date": rule.get("last_verified_date"),
+            "needs_verification": rule.get("needs_verification", False),
             "registration_steps": rule.get("registration_steps", []),
         })
 
