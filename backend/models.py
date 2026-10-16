@@ -73,3 +73,53 @@ class ComplianceResult(Base):
 
     profile = relationship("BusinessProfile", back_populates="results")
 
+
+class KnowledgeDocument(Base):
+    __tablename__ = "knowledge_documents"
+
+    id = Column(Integer, primary_key=True, index=True)
+    doc_id = Column(String, unique=True, index=True, nullable=False)
+    title = Column(String, nullable=False)
+    filename = Column(String, nullable=True)
+    file_type = Column(String, nullable=True)  # pdf, docx, txt, manual, rule_seed
+    source_url = Column(String, nullable=True)
+    source_authority = Column(String, nullable=True)
+    jurisdiction_type = Column(String, nullable=False, default="central")  # central, state, UT
+    jurisdiction = Column(String, nullable=False, default="Central")
+    category = Column(String, nullable=True)
+    law_name = Column(String, nullable=True)
+    verification_status = Column(String, nullable=False, default="verified")  # verified, pending_verification, needs_verification
+    total_chunks = Column(Integer, default=0)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    chunks = relationship("KnowledgeChunk", back_populates="document", cascade="all, delete-orphan")
+
+
+class KnowledgeChunk(Base):
+    __tablename__ = "knowledge_chunks"
+
+    id = Column(Integer, primary_key=True, index=True)
+    chunk_id = Column(String, unique=True, index=True, nullable=False)
+    document_id = Column(Integer, ForeignKey("knowledge_documents.id"), nullable=False)
+    faiss_id = Column(Integer, unique=True, index=True, nullable=False)
+
+    title = Column(String, nullable=False)
+    text = Column(String, nullable=False)
+    source_url = Column(String, nullable=True)
+    source_authority = Column(String, nullable=True)
+    jurisdiction_type = Column(String, nullable=False, default="central")
+    jurisdiction = Column(String, nullable=False, default="Central")
+    law_name = Column(String, nullable=True)
+    section_reference = Column(String, nullable=True)
+    effective_from = Column(String, nullable=True)
+    effective_until = Column(String, nullable=True)
+    last_verified_at = Column(String, nullable=True)
+    verification_status = Column(String, nullable=False, default="verified")
+    page_number = Column(Integer, nullable=True)
+    language = Column(String, nullable=False, default="English")
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    document = relationship("KnowledgeDocument", back_populates="chunks")
+
+

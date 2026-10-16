@@ -10,7 +10,7 @@ Everything else requires an "Authorization: Bearer <token>" header, and
 only ever returns/modifies data that belongs to that logged-in user.
 """
 
-from fastapi import FastAPI, Depends, HTTPException, Header
+from fastapi import FastAPI, Depends, HTTPException, Header, UploadFile, File, Form
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from typing import Optional
@@ -21,9 +21,15 @@ from database import engine, get_db
 from rule_engine import evaluate_profile, load_compliance_rules
 from auth import hash_password, verify_password, create_token, decode_token
 import documents_api
+import rag_llm
+import rag_store
+import rag_ingest
+from rag_config import ALL_INDIAN_STATES, ALL_UNION_TERRITORIES, ADMIN_API_KEY
+
 doc_models = documents_api.define_models(models.Base)
 
 models.Base.metadata.create_all(bind=engine)
+
 
 app = FastAPI(title="MSMEase API", version="0.2.0-with-login")
 
@@ -354,4 +360,197 @@ def update_compliance_result(
 
 
 # ---------- documents + encrypted vault (OCR feature) ----------
-app.include_router(documents_api.build_router(get_db, get_current_user, doc_models))
+app.include_router(documents_api.build_router(get_db, get_current_user, doc_models))
+
+
+# ---------- FAISS RAG Compliance Assistant & Knowledge Base ----------
+@app.get("/api/knowledge/jurisdictions")
+def get_jurisdictions():
+    """Returns available Indian jurisdictions for state/central filtering."""
+    return {
+        "central": ["Central (All India)"],
+        "states": ALL_INDIAN_STATES,
+        "union_territories": ALL_UNION_TERRITORIES,
+        "default": "Tamil Nadu"
+    }
+
+
+@app.post("/api/compliance/ask", response_model=schemas.ComplianceAskResponse)
+def ask_compliance_question(
+    payload: schemas.ComplianceAskRequest,
+    db: Session = Depends(get_db)
+):
+    """
+    RAG-powered compliance question answering.
+    Searches FAISS for relevant legal passages, filters by jurisdiction & category,
+    and returns a strictly grounded response with authoritative legal citations.
+    """
+    if not payload.question.strip():
+        raise HTTPException(status_code=422, detail="Question cannot be empty")
+
+    passages = rag_llm.retrieve_relevant_passages(
+        db=db,
+        query=payload.question,
+        jurisdiction=payload.jurisdiction,
+        category=payload.category,
+        top_k=payload.top_k or 5
+    )
+
+    result = rag_llm.generate_llm_answer(
+        query=payload.question,
+        passages=passages,
+        jurisdiction=payload.jurisdiction
+    )
+
+    return {
+        "question": payload.question,
+        "jurisdiction": payload.jurisdiction or "Central (All India)",
+        "answer": result["answer"],
+        "citations": result["citations"],
+        "provider": result["provider"],
+        "passages_count": result["passages_count"]
+    }
+
+
+@app.post("/api/knowledge/search", response_model=schemas.KnowledgeSearchResponse)
+def search_knowledge(
+    payload: schemas.KnowledgeSearchRequest,
+    db: Session = Depends(get_db)
+):
+    """Direct vector similarity search over compliance passages with metadata."""
+    passages = rag_llm.retrieve_relevant_passages(
+        db=db,
+        query=payload.query,
+        jurisdiction=payload.jurisdiction,
+        category=payload.category,
+        top_k=payload.top_k or 5
+    )
+    citations = [
+        {
+            "chunk_id": p["chunk_id"],
+            "title": p["title"],
+            "law_name": p["law_name"],
+            "section_reference": p.get("section_reference"),
+            "source_authority": p["source_authority"],
+            "source_url": p["source_url"],
+            "jurisdiction": p["jurisdiction"],
+            "jurisdiction_type": p["jurisdiction_type"],
+            "verification_status": p["verification_status"],
+            "page_number": p.get("page_number"),
+            "relevance_score": round(p["score"], 3),
+            "excerpt": p["text"][:250].strip() + ("..." if len(p["text"]) > 250 else "")
+        }
+        for p in passages
+    ]
+    return {
+        "query": payload.query,
+        "total_results": len(citations),
+        "results": citations
+    }
+
+
+@app.get("/api/knowledge/documents", response_model=list[schemas.KnowledgeDocumentOut])
+def list_knowledge_documents(db: Session = Depends(get_db)):
+    """Lists all indexed compliance source documents and gazettes."""
+    return db.query(models.KnowledgeDocument).order_by(models.KnowledgeDocument.id.desc()).all()
+
+
+@app.post("/api/knowledge/ingest")
+async def ingest_file_document(
+    file: UploadFile = File(...),
+    title: str = Form(...),
+    jurisdiction: str = Form("Central"),
+    category: str = Form("General"),
+    law_name: Optional[str] = Form(None),
+    source_url: Optional[str] = Form(None),
+    source_authority: Optional[str] = Form(None),
+    verification_status: str = Form("verified"),
+    db: Session = Depends(get_db)
+):
+    """
+    Ingests PDF, DOCX, or text compliance files into the knowledge base.
+    Chunks the document, embeds it into FAISS, and persists chunk metadata in SQLite.
+    """
+    filename = file.filename or "unknown"
+    ext = filename.split(".")[-1].lower() if "." in filename else ""
+    file_bytes = await file.read()
+
+    pages_data = None
+    raw_text = ""
+
+    if ext == "pdf":
+        pages_data = rag_ingest.extract_text_from_pdf(file_bytes)
+        if not pages_data:
+            # Fallback for scanned PDF without text stream
+            raw_text = f"Compliance document: {title}. Uploaded file {filename}."
+    elif ext == "docx":
+        raw_text = rag_ingest.extract_text_from_docx(file_bytes)
+    else:
+        raw_text = file_bytes.decode("utf-8", errors="ignore")
+
+    res = rag_ingest.ingest_document_content(
+        db=db,
+        title=title,
+        raw_content=raw_text,
+        filename=filename,
+        file_type=ext or "text",
+        source_url=source_url,
+        source_authority=source_authority,
+        jurisdiction=jurisdiction,
+        category=category,
+        law_name=law_name,
+        verification_status=verification_status,
+        pages_data=pages_data
+    )
+    return res
+
+
+@app.post("/api/knowledge/ingest-text")
+def ingest_text_document(
+    payload: schemas.KnowledgeIngestTextRequest,
+    db: Session = Depends(get_db)
+):
+    """Ingests raw compliance notification or guidance text directly."""
+    res = rag_ingest.ingest_document_content(
+        db=db,
+        title=payload.title,
+        raw_content=payload.content,
+        file_type="manual",
+        source_url=payload.source_url,
+        source_authority=payload.source_authority,
+        jurisdiction=payload.jurisdiction,
+        category=payload.category,
+        law_name=payload.law_name,
+        verification_status=payload.verification_status
+    )
+    return res
+
+
+@app.post("/api/knowledge/reindex")
+def reindex_vector_store(db: Session = Depends(get_db)):
+    """Rebuilds the entire FAISS vector index from SQLite database chunks."""
+    result = rag_store.rebuild_index_from_db(db)
+    return result
+
+
+@app.delete("/api/knowledge/documents/{doc_id}")
+def delete_document(doc_id: str, db: Session = Depends(get_db)):
+    """Deletes a compliance document and its vectors from SQLite and FAISS."""
+    success = rag_ingest.delete_knowledge_document(db, doc_id)
+    if not success:
+        raise HTTPException(status_code=404, detail="Document not found")
+    return {"status": "success", "message": f"Document {doc_id} deleted"}
+
+
+@app.get("/api/knowledge/stats")
+def get_knowledge_stats(db: Session = Depends(get_db)):
+    """Returns vector store and database index statistics."""
+    faiss_stats = rag_store.get_index_stats()
+    doc_count = db.query(models.KnowledgeDocument).count()
+    chunk_count = db.query(models.KnowledgeChunk).count()
+    return {
+        "documents_count": doc_count,
+        "chunks_count": chunk_count,
+        "faiss_stats": faiss_stats
+    }
+

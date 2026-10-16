@@ -44,10 +44,13 @@
   </div>
   <nav class="topbar__nav" id="topbar-nav" aria-label="Main">
     <button class="navlink" data-view="landing">Home</button>
+    <button class="navlink" data-view="askai">Ask Compliance AI</button>
+    <button class="navlink" data-view="knowledge">Knowledge Base</button>
     <button class="navlink" data-view="profile">New profile</button>
     <button class="navlink" data-view="myprofiles">My profiles</button>
     <button class="navlink" data-view="dashboard">Dashboard</button>
   </nav>
+
   <div class="topbar__account" id="topbar-account"></div>
 </header>
 
@@ -275,6 +278,206 @@
       <div id="dash-list" class="results"></div>
     </div>
   </section>
+
+  <!-- ===================== ASK COMPLIANCE AI (FAISS RAG) ===================== -->
+  <section id="view-askai" class="view hidden">
+    <div class="pagehead">
+      <h2>Ask Compliance AI</h2>
+      <p class="section__sub">FAISS-indexed semantic compliance answers across Indian Central Acts and all 36 States/UTs with exact legal citations.</p>
+    </div>
+
+    <div class="glass panel searchbox-panel">
+      <form id="askai-form" class="askai__form">
+        <div class="askai__input-row">
+          <input type="text" id="askai-query" required placeholder="e.g. What are EPF thresholds and penalties for MSMEs in Tamil Nadu?" autocomplete="off">
+          <button type="submit" class="btn btn--primary" id="askai-submit-btn">Ask AI</button>
+        </div>
+
+        <div class="askai__filters-row">
+          <label class="askai__filter-label">Jurisdiction:
+            <select id="askai-jurisdiction">
+              <option value="Central (All India)">Central (All India)</option>
+              <optgroup label="States" id="askai-states-optgroup">
+                <option value="Tamil Nadu" selected>Tamil Nadu</option>
+              </optgroup>
+              <optgroup label="Union Territories" id="askai-uts-optgroup"></optgroup>
+            </select>
+          </label>
+
+          <label class="askai__filter-label">Category:
+            <select id="askai-category">
+              <option value="all">All Categories</option>
+              <option value="Tax">Taxation & GST</option>
+              <option value="Labour">Labour & Employment</option>
+              <option value="Licensing">Licensing & Operations</option>
+              <option value="Environment">Environmental & Pollution</option>
+              <option value="MSME">MSME & Udyam</option>
+              <option value="Governance">Governance & Safety</option>
+            </select>
+          </label>
+        </div>
+
+        <div class="askai__chips">
+          <span class="askai__chip-hint">Common questions:</span>
+          <button type="button" class="askai__chip" data-q="What is the employee threshold for EPF and what are the penalties for non-compliance?">EPF Employee Thresholds</button>
+          <button type="button" class="askai__chip" data-q="What is the GST registration turnover limit for manufacturing in Tamil Nadu?">GST Limits in Tamil Nadu</button>
+          <button type="button" class="askai__chip" data-q="When is a factory license required under the Factories Act?">Factories Act Power & Headcount</button>
+          <button type="button" class="askai__chip" data-q="What are the annual leave and festival holidays under Tamil Nadu Shops and Establishments Act?">TN Shops & Establishments Leave</button>
+          <button type="button" class="askai__chip" data-q="When is TNPCB Pollution Consent (CTE and CTO) required for small industries?">TNPCB Pollution Consent</button>
+        </div>
+      </form>
+    </div>
+
+    <!-- AI Response & Grounded Citations -->
+    <div id="askai-result-area" class="askai__results-area hidden">
+      <div class="glass panel askai__answer-card">
+        <div class="askai__answer-header">
+          <div class="askai__badge-group">
+            <span class="badge badge--verified" id="askai-provider-badge">FAISS Semantic RAG</span>
+            <span class="badge badge--category" id="askai-jurisdiction-badge">Tamil Nadu</span>
+          </div>
+          <button type="button" class="linkbtn" id="askai-copy-btn">Copy guidance</button>
+        </div>
+        <div class="askai__answer-content" id="askai-answer-text"></div>
+      </div>
+
+      <div class="askai__citations-section">
+        <h3 class="askai__citations-title">Statutory Citations & Source Evidence (<span id="askai-citations-count">0</span>)</h3>
+        <p class="section__sub">Every obligation above was retrieved directly from the indexed statutory documents below:</p>
+        <div class="askai__citations-grid" id="askai-citations-grid"></div>
+      </div>
+    </div>
+
+    <!-- Loading State -->
+    <div id="askai-loading" class="askai__loading glass panel hidden">
+      <div class="askai__spinner"></div>
+      <p>Retrieving statutory passages from FAISS vector store and synthesizing verified legal guidance...</p>
+    </div>
+  </section>
+
+  <!-- ===================== COMPLIANCE KNOWLEDGE BASE ===================== -->
+  <section id="view-knowledge" class="view hidden">
+    <div class="pagehead">
+      <h2>Compliance Knowledge Base & FAISS Index</h2>
+      <p class="section__sub">Explore indexed Central and State regulations, upload new statutory circulars, and maintain the vector store.</p>
+    </div>
+
+    <!-- Knowledge Stats Bar -->
+    <div class="knowledge__stats-row">
+      <div class="glass panel kstat-card">
+        <span class="kstat-num" id="kstat-docs">--</span>
+        <span class="kstat-label">Indexed Documents</span>
+      </div>
+      <div class="glass panel kstat-card">
+        <span class="kstat-num" id="kstat-chunks">--</span>
+        <span class="kstat-label">Vector Chunks in FAISS</span>
+      </div>
+      <div class="glass panel kstat-card">
+        <span class="kstat-num" id="kstat-dim">384-d</span>
+        <span class="kstat-label">Vector Dimension</span>
+      </div>
+      <div class="glass panel kstat-card kstat-card--action">
+        <button type="button" class="btn btn--raised" id="kstat-reindex-btn">Rebuild FAISS Index</button>
+        <span class="kstat-label" id="kstat-reindex-msg">Re-sync from SQLite chunks</span>
+      </div>
+    </div>
+
+    <!-- Ingestion Panel -->
+    <div class="glass panel knowledge__ingest-panel">
+      <div class="cardtitle">Ingest Compliance Document or Notification</div>
+      <p class="section__sub">Upload an official Act, gazette PDF/DOCX or paste notification text. Chunks will be embedded and added to FAISS.</p>
+
+      <div class="knowledge__tabs">
+        <button type="button" class="tabbtn active" id="ktab-file-btn">Upload File (PDF / DOCX)</button>
+        <button type="button" class="tabbtn" id="ktab-text-btn">Direct Text / Circular</button>
+      </div>
+
+      <!-- File Upload Form -->
+      <form id="knowledge-upload-form" class="form knowledge__form">
+        <div class="form__row form__row--split">
+          <label>Document Title *
+            <input type="text" name="title" required placeholder="e.g. Tamil Nadu Factories Amendment Rules 2024">
+          </label>
+          <label>Statutory File (PDF, DOCX, TXT) *
+            <input type="file" name="file" accept=".pdf,.docx,.txt" required>
+          </label>
+        </div>
+        <div class="form__row form__row--split">
+          <label>Jurisdiction *
+            <select name="jurisdiction" id="kform-jurisdiction" required></select>
+          </label>
+          <label>Category *
+            <select name="category" required>
+              <option value="General">General</option>
+              <option value="Tax">Taxation & GST</option>
+              <option value="Labour">Labour & Employment</option>
+              <option value="Licensing">Licensing & Operations</option>
+              <option value="Environment">Environmental & Pollution</option>
+              <option value="MSME">MSME & Udyam</option>
+            </select>
+          </label>
+        </div>
+        <div class="form__row form__row--split">
+          <label>Applicable Act / Regulation Name
+            <input type="text" name="law_name" placeholder="e.g. Factories Act, 1948">
+          </label>
+          <label>Issuing Authority
+            <input type="text" name="source_authority" placeholder="e.g. Directorate of Industrial Safety & Health">
+          </label>
+        </div>
+        <div class="form__row form__row--split">
+          <label>Official Source URL
+            <input type="url" name="source_url" placeholder="https://dish.tn.gov.in">
+          </label>
+          <label>Verification Status
+            <select name="verification_status">
+              <option value="verified">Verified Official Law</option>
+              <option value="needs_verification">Needs Verification</option>
+            </select>
+          </label>
+        </div>
+        <div class="form__actions">
+          <button type="submit" class="btn btn--primary" id="kform-upload-btn">Ingest & Vectorize Document</button>
+        </div>
+      </form>
+
+      <!-- Direct Text Form -->
+      <form id="knowledge-text-form" class="form knowledge__form hidden">
+        <div class="form__row form__row--split">
+          <label>Notification / Rule Title *
+            <input type="text" name="title" required placeholder="e.g. Ministry of MSME Notification on Udyam Thresholds">
+          </label>
+          <label>Jurisdiction *
+            <select name="jurisdiction" id="ktext-jurisdiction" required></select>
+          </label>
+        </div>
+        <div class="form__row">
+          <label>Compliance Text / Clauses *
+            <textarea name="content" rows="6" required placeholder="Paste full statutory notification text, sections, conditions, and deadlines..."></textarea>
+          </label>
+        </div>
+        <div class="form__row form__row--split">
+          <label>Statutory Authority
+            <input type="text" name="source_authority" placeholder="e.g. Ministry of Micro, Small and Medium Enterprises">
+          </label>
+          <label>Official Portal URL
+            <input type="url" name="source_url" placeholder="https://msme.gov.in">
+          </label>
+        </div>
+        <div class="form__actions">
+          <button type="submit" class="btn btn--primary" id="ktext-submit-btn">Ingest & Vectorize Text</button>
+        </div>
+      </form>
+      <p id="knowledge-form-msg" class="form-feedback hidden"></p>
+    </div>
+
+    <!-- Indexed Documents List -->
+    <div class="glass panel listpanel">
+      <div class="cardtitle">Indexed Statutory Documents & Gazettes</div>
+      <div id="knowledge-docs-list" class="kdocs-list"></div>
+    </div>
+  </section>
+
 
   <!-- ===================== VAULT DIALOG ===================== -->
   <div id="vault-backdrop" class="modal-backdrop hidden">

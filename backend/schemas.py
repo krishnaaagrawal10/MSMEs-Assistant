@@ -93,3 +93,80 @@ class ComplianceResultOut(BaseModel):
     source: str
     registration_steps: Optional[list[RegistrationStep]] = None
 
+
+# ---------- RAG Knowledge & Q&A ----------
+class CitationOut(BaseModel):
+    chunk_id: str
+    title: str
+    law_name: Optional[str] = None
+    section_reference: Optional[str] = None
+    source_authority: Optional[str] = None
+    source_url: Optional[str] = None
+    jurisdiction: Optional[str] = None
+    jurisdiction_type: Optional[str] = None
+    verification_status: Optional[str] = "verified"
+    page_number: Optional[int] = None
+    relevance_score: Optional[float] = None
+    excerpt: Optional[str] = None
+
+
+class ComplianceAskRequest(BaseModel):
+    question: str = Field(..., min_length=3)
+    jurisdiction: Optional[str] = "Tamil Nadu"
+    category: Optional[str] = None
+    top_k: Optional[int] = 5
+
+
+class ComplianceAskResponse(BaseModel):
+    question: str
+    jurisdiction: str
+    answer: str
+    citations: list[CitationOut]
+    provider: str
+    passages_count: int
+
+
+class KnowledgeSearchRequest(BaseModel):
+    query: str = Field(..., min_length=2)
+    jurisdiction: Optional[str] = None
+    category: Optional[str] = None
+    top_k: Optional[int] = 5
+
+
+class KnowledgeSearchResponse(BaseModel):
+    query: str
+    total_results: int
+    results: list[CitationOut]
+
+
+class KnowledgeDocumentOut(BaseModel):
+    id: int
+    doc_id: str
+    title: str
+    filename: Optional[str] = None
+    file_type: Optional[str] = None
+    source_url: Optional[str] = None
+    source_authority: Optional[str] = None
+    jurisdiction_type: str
+    jurisdiction: str
+    category: Optional[str] = None
+    law_name: Optional[str] = None
+    verification_status: str
+    total_chunks: int
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class KnowledgeIngestTextRequest(BaseModel):
+    title: str = Field(..., min_length=2)
+    content: str = Field(..., min_length=10)
+    jurisdiction: str = "Central"
+    category: Optional[str] = "General"
+    law_name: Optional[str] = None
+    source_url: Optional[str] = None
+    source_authority: Optional[str] = None
+    verification_status: str = "verified"
+
+

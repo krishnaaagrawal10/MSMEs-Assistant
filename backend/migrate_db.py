@@ -115,11 +115,62 @@ try:
                 WHERE id = ?
             """, (app, prog, act_section, jurisdiction, last_verified, row_id))
 
+    # 4. Create knowledge_documents and knowledge_chunks if not present
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS knowledge_documents (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            doc_id TEXT UNIQUE NOT NULL,
+            title TEXT NOT NULL,
+            filename TEXT,
+            file_type TEXT,
+            source_url TEXT,
+            source_authority TEXT,
+            jurisdiction_type TEXT NOT NULL DEFAULT 'central',
+            jurisdiction TEXT NOT NULL DEFAULT 'Central',
+            category TEXT,
+            law_name TEXT,
+            verification_status TEXT NOT NULL DEFAULT 'verified',
+            total_chunks INTEGER DEFAULT 0,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
+    conn.execute("CREATE INDEX IF NOT EXISTS ix_knowledge_documents_doc_id ON knowledge_documents(doc_id)")
+
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS knowledge_chunks (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            chunk_id TEXT UNIQUE NOT NULL,
+            document_id INTEGER NOT NULL REFERENCES knowledge_documents(id) ON DELETE CASCADE,
+            faiss_id INTEGER UNIQUE NOT NULL,
+            title TEXT NOT NULL,
+            text TEXT NOT NULL,
+            source_url TEXT,
+            source_authority TEXT,
+            jurisdiction_type TEXT NOT NULL DEFAULT 'central',
+            jurisdiction TEXT NOT NULL DEFAULT 'Central',
+            law_name TEXT,
+            section_reference TEXT,
+            effective_from TEXT,
+            effective_until TEXT,
+            last_verified_at TEXT,
+            verification_status TEXT NOT NULL DEFAULT 'verified',
+            page_number INTEGER,
+            language TEXT NOT NULL DEFAULT 'English',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
+    conn.execute("CREATE INDEX IF NOT EXISTS ix_knowledge_chunks_chunk_id ON knowledge_chunks(chunk_id)")
+    conn.execute("CREATE INDEX IF NOT EXISTS ix_knowledge_chunks_faiss_id ON knowledge_chunks(faiss_id)")
+    conn.execute("CREATE INDEX IF NOT EXISTS ix_knowledge_chunks_document_id ON knowledge_chunks(document_id)")
+
     conn.commit()
     print("Database migration completed successfully.")
     print("compliance_results columns:")
     for column in conn.execute("PRAGMA table_info(compliance_results)"):
         print(f" - {column[1]} ({column[2]})")
+    print("knowledge_documents and knowledge_chunks tables verified.")
+
 
 except Exception as e:
     conn.rollback()

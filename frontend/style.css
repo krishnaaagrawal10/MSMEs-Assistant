@@ -746,3 +746,412 @@ input.switch:focus-visible { outline: 2px solid var(--orange); outline-offset: 3
   .modal { padding: 26px 20px; }
   .pagehead h2, .dash__header h2 { font-size: 28px; }
 }
+
+/* ===================================================================
+   Ask Compliance AI (FAISS RAG) & Knowledge Base
+   =================================================================== */
+
+.searchbox-panel {
+  margin-bottom: 24px;
+}
+
+.askai__form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.askai__input-row {
+  display: flex;
+  gap: 12px;
+}
+
+.askai__input-row input {
+  flex: 1;
+  font-family: var(--font);
+  font-size: 16px;
+  font-weight: 500;
+  padding: 14px 18px;
+  border-radius: 18px;
+  border: 1px solid rgba(110, 130, 165, 0.28);
+  background: rgba(255, 255, 255, 0.75);
+  box-shadow: var(--neu-inset);
+  color: var(--ink);
+}
+
+.askai__input-row input:focus {
+  outline: none;
+  border-color: var(--orange);
+  box-shadow: 0 0 0 3px rgba(240, 128, 28, 0.22);
+}
+
+.askai__filters-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.askai__filter-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink-2);
+}
+
+.askai__filter-label select {
+  font-family: var(--font);
+  font-size: 14px;
+  font-weight: 600;
+  padding: 8px 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(110, 130, 165, 0.25);
+  background: rgba(255, 255, 255, 0.85);
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.askai__chips {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding-top: 4px;
+}
+
+.askai__chip-hint {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink-3);
+}
+
+.askai__chip {
+  background: rgba(255, 255, 255, 0.65);
+  border: 1px solid rgba(110, 130, 165, 0.2);
+  border-radius: 20px;
+  padding: 5px 12px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink-2);
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+
+.askai__chip:hover {
+  background: rgba(240, 128, 28, 0.12);
+  border-color: var(--orange);
+  color: var(--orange);
+  transform: translateY(-1px);
+}
+
+.askai__results-area {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.askai__answer-card {
+  border-left: 4px solid var(--orange);
+  background: rgba(255, 255, 255, 0.58);
+}
+
+.askai__answer-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(110, 130, 165, 0.18);
+}
+
+.askai__badge-group {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.badge--verified {
+  background: rgba(47, 168, 120, 0.15);
+  color: #1e7e58;
+  border: 1px solid rgba(47, 168, 120, 0.35);
+  border-radius: 12px;
+  padding: 3px 10px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.badge--unverified {
+  background: rgba(239, 68, 68, 0.12);
+  color: #b91c1c;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: 12px;
+  padding: 3px 10px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.badge--category {
+  background: rgba(76, 141, 246, 0.14);
+  color: #2563eb;
+  border: 1px solid rgba(76, 141, 246, 0.3);
+  border-radius: 12px;
+  padding: 3px 10px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.askai__answer-content {
+  font-size: 15px;
+  line-height: 1.7;
+  color: var(--ink);
+}
+
+.askai__answer-content h3 {
+  font-size: 18px;
+  margin-top: 8px;
+  margin-bottom: 10px;
+  color: var(--ink);
+}
+
+.askai__answer-content h4 {
+  font-size: 16px;
+  margin-top: 14px;
+  margin-bottom: 8px;
+  color: var(--ink-2);
+}
+
+.askai__answer-content ul, .askai__answer-content ol {
+  margin: 8px 0 14px 22px;
+  padding: 0;
+}
+
+.askai__answer-content li {
+  margin-bottom: 6px;
+}
+
+.askai__answer-content blockquote {
+  margin: 12px 0;
+  padding: 10px 16px;
+  background: rgba(240, 128, 28, 0.08);
+  border-left: 3px solid var(--orange);
+  border-radius: 0 12px 12px 0;
+  font-style: italic;
+  color: var(--ink-2);
+}
+
+.askai__citations-title {
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.askai__citations-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+  gap: 16px;
+  margin-top: 14px;
+}
+
+.citation-card {
+  padding: 18px;
+  border-radius: 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 12px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.citation-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 16px 36px rgba(58, 78, 120, 0.16);
+}
+
+.citation-card__top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.citation-card__law {
+  font-weight: 700;
+  font-size: 15px;
+  color: var(--ink);
+  line-height: 1.35;
+}
+
+.citation-card__meta {
+  font-size: 13px;
+  color: var(--ink-3);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.citation-card__excerpt {
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--ink-2);
+  background: rgba(255, 255, 255, 0.5);
+  padding: 8px 12px;
+  border-radius: 12px;
+  border-left: 2px solid var(--sky);
+}
+
+.citation-card__footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-top: 1px solid rgba(110, 130, 165, 0.15);
+  padding-top: 8px;
+  font-size: 12px;
+}
+
+.askai__loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 24px;
+  gap: 16px;
+  text-align: center;
+}
+
+.askai__spinner {
+  width: 44px;
+  height: 44px;
+  border: 4px solid rgba(240, 128, 28, 0.2);
+  border-top-color: var(--orange);
+  border-radius: 50%;
+  animation: spin 0.85s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ---------- Knowledge Base Styles ---------- */
+.knowledge__stats-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.kstat-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px 14px;
+  text-align: center;
+  border-radius: 20px;
+}
+
+.kstat-num {
+  font-size: 32px;
+  font-weight: 800;
+  color: var(--orange);
+  line-height: 1.1;
+}
+
+.kstat-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink-3);
+  margin-top: 4px;
+}
+
+.knowledge__tabs {
+  display: flex;
+  gap: 10px;
+  margin: 16px 0;
+}
+
+.tabbtn {
+  background: rgba(255, 255, 255, 0.6);
+  border: 1px solid rgba(110, 130, 165, 0.25);
+  border-radius: 14px;
+  padding: 8px 18px;
+  font-family: var(--font);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--ink-2);
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+
+.tabbtn.active {
+  background: var(--ink);
+  color: #fff;
+  border-color: var(--ink);
+  box-shadow: 0 4px 12px rgba(27, 38, 51, 0.2);
+}
+
+.form-feedback {
+  margin-top: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 8px 14px;
+  border-radius: 12px;
+}
+
+.form-feedback--success {
+  background: rgba(47, 168, 120, 0.15);
+  color: #1e7e58;
+}
+
+.form-feedback--error {
+  background: rgba(239, 68, 68, 0.15);
+  color: #b91c1c;
+}
+
+.kdocs-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.kdoc-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 18px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.55);
+  border: 1px solid rgba(110, 130, 165, 0.2);
+  gap: 14px;
+}
+
+.kdoc-item__title {
+  font-weight: 700;
+  font-size: 15px;
+  color: var(--ink);
+}
+
+.kdoc-item__sub {
+  font-size: 12px;
+  color: var(--ink-3);
+  margin-top: 2px;
+}
+
+.kdoc-item__actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+@media (max-width: 900px) {
+  .knowledge__stats-row { grid-template-columns: repeat(2, 1fr); }
+  .askai__citations-grid { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 600px) {
+  .knowledge__stats-row { grid-template-columns: 1fr; }
+  .askai__input-row { flex-direction: column; }
+  .kdoc-item { flex-direction: column; align-items: flex-start; }
+}
+

@@ -57,9 +57,12 @@ document.querySelectorAll(".navlink[data-view]").forEach(btn => {
   btn.addEventListener("click", () => {
     const view = btn.dataset.view;
     if (view === "myprofiles") loadMyProfiles();
+    if (view === "askai") initAskAiView();
+    if (view === "knowledge") loadKnowledgeBase();
     showView(view);
   });
 });
+
 document.getElementById("landing-start").addEventListener("click", () => showView("profile"));
 document.getElementById("landing-profiles").addEventListener("click", () => { loadMyProfiles(); showView("myprofiles"); });
 
@@ -1048,4 +1051,423 @@ document.getElementById("detail-backdrop").addEventListener("click", (e) => {
   if (e.target.id === "detail-backdrop") closeDetail();
 });
 document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeDetail(); });
+
+
+// ===================================================================
+// FAISS RAG Compliance Assistant & Knowledge Base Logic
+// ===================================================================
+
+let cachedJurisdictions = null;
+
+function renderSimpleMarkdown(text) {
+  if (!text) return "";
+  let html = esc(text);
+
+  // Headers
+  html = html.replace(/^### (.*$)/gim, '<h3>$1</h3>');
+  html = html.replace(/^#### (.*$)/gim, '<h4>$1</h4>');
+  html = html.replace(/^## (.*$)/gim, '<h3>$1</h3>');
+  html = html.replace(/^# (.*$)/gim, '<h2>$1</h2>');
+
+  // Bold & Italic
+  html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+  html = html.replace(/\*(.*?)\*/g, '<em>$1</em>');
+
+  // Links
+  html = html.replace(/\[(.*?)\]\((https?:\/\/.*?)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>');
+
+  // Inline code
+  html = html.replace(/`(.*?)`/g, '<code>$1</code>');
+
+  // Blockquotes
+  html = html.replace(/^\&gt; (.*$)/gim, '<blockquote>$1</blockquote>');
+
+  // Unordered list items
+  html = html.replace(/^[*-] (.*$)/gim, '<li>$1</li>');
+  html = html.replace(/(<li>.*<\/li>)/gim, '<ul>$1</ul>');
+  html = html.replace(/<\/ul>\s*<ul>/g, '');
+
+  // Ordered list items
+  html = html.replace(/^\d+\. (.*$)/gim, '<li>$1</li>');
+
+  // Paragraph breaks
+  html = html.replace(/\n{2,}/g, '<br><br>');
+
+  return html;
+}
+
+async function loadJurisdictions() {
+  if (cachedJurisdictions) return cachedJurisdictions;
+  try {
+    const res = await apiFetch("/api/knowledge/jurisdictions");
+    if (!res.ok) return null;
+    cachedJurisdictions = await res.json();
+
+    const askSel = document.getElementById("askai-jurisdiction");
+    const kformSel = document.getElementById("kform-jurisdiction");
+    const ktextSel = document.getElementById("ktext-jurisdiction");
+
+    const statesOpt = cachedJurisdictions.states.map(s => 
+      `<option value="${esc(s)}" ${s === 'Tamil Nadu' ? 'selected' : ''}>${esc(s)}</option>`
+    ).join("");
+
+    const utOpt = cachedJurisdictions.union_territories.map(u => 
+      `<option value="${esc(u)}">${esc(u)}</option>`
+    ).join("");
+
+    const fullMarkup = `
+      <option value="Central (All India)">Central (All India)</option>
+      <optgroup label="States">${statesOpt}</optgroup>
+      <optgroup label="Union Territories">${utOpt}</optgroup>
+    `;
+
+    if (askSel) askSel.innerHTML = fullMarkup;
+    if (kformSel) kformSel.innerHTML = fullMarkup;
+    if (ktextSel) ktextSel.innerHTML = fullMarkup;
+
+    return cachedJurisdictions;
+  } catch (err) {
+    console.warn("Failed to load jurisdictions:", err);
+    return null;
+  }
+}
+
+function initAskAiView() {
+  loadJurisdictions();
+}
+
+// Ask AI Form Submission
+const askAiForm = document.getElementById("askai-form");
+if (askAiForm) {
+  askAiForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const queryInput = document.getElementById("askai-query");
+    const jurisdictionSel = document.getElementById("askai-jurisdiction");
+    const categorySel = document.getElementById("askai-category");
+    const loadingEl = document.getElementById("askai-loading");
+    const resultArea = document.getElementById("askai-result-area");
+    const submitBtn = document.getElementById("askai-submit-btn");
+
+    const question = (queryInput.value || "").trim();
+    if (!question) return;
+
+    const jurisdiction = jurisdictionSel ? jurisdictionSel.value : "Tamil Nadu";
+    const category = categorySel && categorySel.value !== "all" ? categorySel.value : null;
+
+    loadingEl.classList.remove("hidden");
+    resultArea.classList.add("hidden");
+    submitBtn.disabled = true;
+
+    try {
+      const res = await apiFetch("/api/compliance/ask", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ question, jurisdiction, category, top_k: 5 })
+      });
+
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.detail || "Error querying compliance knowledge base.");
+      }
+
+      const data = await res.json();
+
+      // Render answer
+      document.getElementById("askai-answer-text").innerHTML = renderSimpleMarkdown(data.answer);
+      document.getElementById("askai-jurisdiction-badge").textContent = data.jurisdiction || "Central & State";
+      
+      const providerLabel = data.provider === "gemini" ? "Google Gemini RAG" : 
+                            data.provider === "openai" ? "OpenAI RAG" : "FAISS Semantic RAG";
+      document.getElementById("askai-provider-badge").textContent = providerLabel;
+
+      // Render citations
+      const citationsCountEl = document.getElementById("askai-citations-count");
+      const citationsGridEl = document.getElementById("askai-citations-grid");
+
+      citationsCountEl.textContent = data.citations ? data.citations.length : 0;
+
+      if (!data.citations || data.citations.length === 0) {
+        citationsGridEl.innerHTML = `
+          <p class="section__sub" style="grid-column: 1 / -1; padding: 12px 0;">
+            No specific statutory citation passages matched with high confidence.
+          </p>
+        `;
+      } else {
+        citationsGridEl.innerHTML = data.citations.map((c, idx) => {
+          const isVerified = (c.verification_status || "").toLowerCase() === "verified";
+          const statusBadge = isVerified 
+            ? `<span class="badge badge--verified">Verified Law</span>`
+            : `<span class="badge badge--unverified">Needs verification</span>`;
+          
+          const secRef = c.section_reference ? `<span class="chip chip--neutral">${esc(c.section_reference)}</span>` : "";
+          const pageRef = c.page_number ? `<span>Page ${c.page_number}</span>` : "";
+
+          return `
+            <div class="glass panel citation-card">
+              <div class="citation-card__top">
+                <div class="citation-card__law">${esc(c.law_name || c.title)}</div>
+                ${statusBadge}
+              </div>
+              <div class="citation-card__meta">
+                <span><strong>Authority:</strong> ${esc(c.source_authority || "Government Authority")}</span>
+                <span><strong>Jurisdiction:</strong> ${esc(c.jurisdiction || "Central")} (${esc(c.jurisdiction_type || "statutory")})</span>
+                ${secRef ? `<div>${secRef}</div>` : ""}
+              </div>
+              <div class="citation-card__excerpt">
+                "${esc(c.excerpt || "")}"
+              </div>
+              <div class="citation-card__footer">
+                ${pageRef}
+                <a href="${esc(c.source_url || '#')}" target="_blank" rel="noopener noreferrer" class="linkbtn">
+                  Official Source ↗
+                </a>
+              </div>
+            </div>
+          `;
+        }).join("");
+      }
+
+      resultArea.classList.remove("hidden");
+    } catch (err) {
+      alert("Ask AI Error: " + err.message);
+    } finally {
+      loadingEl.classList.add("hidden");
+      submitBtn.disabled = false;
+    }
+  });
+}
+
+// Preset chips click listener
+document.querySelectorAll(".askai__chip").forEach(chip => {
+  chip.addEventListener("click", () => {
+    const q = chip.dataset.q;
+    const queryInput = document.getElementById("askai-query");
+    if (queryInput && q) {
+      queryInput.value = q;
+      document.getElementById("askai-form").dispatchEvent(new Event("submit"));
+    }
+  });
+});
+
+// Copy Guidance Button
+const copyBtn = document.getElementById("askai-copy-btn");
+if (copyBtn) {
+  copyBtn.addEventListener("click", () => {
+    const textEl = document.getElementById("askai-answer-text");
+    if (textEl) {
+      navigator.clipboard.writeText(textEl.innerText || textEl.textContent).then(() => {
+        copyBtn.textContent = "Copied!";
+        setTimeout(() => { copyBtn.textContent = "Copy guidance"; }, 2000);
+      });
+    }
+  });
+}
+
+// ===================================================================
+// Knowledge Base Ingestion & Reindex Handlers
+// ===================================================================
+
+async function loadKnowledgeBase() {
+  loadJurisdictions();
+  const docsEl = document.getElementById("kstat-docs");
+  const chunksEl = document.getElementById("kstat-chunks");
+  const listEl = document.getElementById("knowledge-docs-list");
+
+  try {
+    // 1. Load Stats
+    const statsRes = await apiFetch("/api/knowledge/stats");
+    if (statsRes.ok) {
+      const stats = await statsRes.json();
+      if (docsEl) docsEl.textContent = stats.documents_count || "0";
+      if (chunksEl) chunksEl.textContent = (stats.faiss_stats ? stats.faiss_stats.ntotal : stats.chunks_count) || "0";
+    }
+
+    // 2. Load Documents
+    const docsRes = await apiFetch("/api/knowledge/documents");
+    if (docsRes.ok) {
+      const docs = await docsRes.json();
+      if (!docs || docs.length === 0) {
+        listEl.innerHTML = `<p class="emptynote">No documents in the compliance knowledge base yet.</p>`;
+      } else {
+        listEl.innerHTML = docs.map(d => {
+          const isVerified = (d.verification_status || "").toLowerCase() === "verified";
+          const statusBadge = isVerified 
+            ? `<span class="badge badge--verified">Verified</span>`
+            : `<span class="badge badge--unverified">Needs verification</span>`;
+
+          const sourceLink = d.source_url 
+            ? `<a href="${esc(d.source_url)}" target="_blank" rel="noopener noreferrer" class="linkbtn">Source ↗</a>` 
+            : "";
+
+          return `
+            <div class="kdoc-item" id="kdoc-${esc(d.doc_id)}">
+              <div class="kdoc-item__info">
+                <div class="kdoc-item__title">${esc(d.title)}</div>
+                <div class="kdoc-item__sub">
+                  ${esc(d.jurisdiction)} &bull; ${esc(d.category || "General")} &bull; 
+                  ${d.total_chunks} vector chunks &bull; Authority: ${esc(d.source_authority || "Official")}
+                </div>
+              </div>
+              <div class="kdoc-item__actions">
+                ${statusBadge}
+                ${sourceLink}
+                <button type="button" class="btn btn--raised" style="padding: 6px 12px; font-size: 12px;" onclick="deleteKnowledgeDoc('${esc(d.doc_id)}')">
+                  Delete
+                </button>
+              </div>
+            </div>
+          `;
+        }).join("");
+      }
+    }
+  } catch (err) {
+    console.error("Failed to load knowledge base:", err);
+  }
+}
+
+// Global delete helper
+window.deleteKnowledgeDoc = async function(docId) {
+  if (!confirm(`Are you sure you want to delete this document and remove its vectors from FAISS?`)) return;
+  try {
+    const res = await apiFetch(`/api/knowledge/documents/${encodeURIComponent(docId)}`, { method: "DELETE" });
+    if (res.ok) {
+      loadKnowledgeBase();
+    } else {
+      const err = await res.json().catch(() => ({}));
+      alert(err.detail || "Failed to delete document.");
+    }
+  } catch (err) {
+    alert("Delete failed: " + err.message);
+  }
+};
+
+// Rebuild Index Button
+const reindexBtn = document.getElementById("kstat-reindex-btn");
+if (reindexBtn) {
+  reindexBtn.addEventListener("click", async () => {
+    reindexBtn.disabled = true;
+    const msgEl = document.getElementById("kstat-reindex-msg");
+    if (msgEl) msgEl.textContent = "Rebuilding FAISS index from SQLite...";
+
+    try {
+      const res = await apiFetch("/api/knowledge/reindex", { method: "POST" });
+      const data = await res.json();
+      if (msgEl) msgEl.textContent = data.message || "Index rebuilt successfully!";
+      loadKnowledgeBase();
+    } catch (err) {
+      if (msgEl) msgEl.textContent = "Reindex failed: " + err.message;
+    } finally {
+      reindexBtn.disabled = false;
+      setTimeout(() => {
+        if (msgEl) msgEl.textContent = "Re-sync from SQLite chunks";
+      }, 4000);
+    }
+  });
+}
+
+// Ingestion Tabs (File vs Direct Text)
+const tabFileBtn = document.getElementById("ktab-file-btn");
+const tabTextBtn = document.getElementById("ktab-text-btn");
+const fileForm = document.getElementById("knowledge-upload-form");
+const textForm = document.getElementById("knowledge-text-form");
+
+if (tabFileBtn && tabTextBtn && fileForm && textForm) {
+  tabFileBtn.addEventListener("click", () => {
+    tabFileBtn.classList.add("active");
+    tabTextBtn.classList.remove("active");
+    fileForm.classList.remove("hidden");
+    textForm.classList.add("hidden");
+  });
+
+  tabTextBtn.addEventListener("click", () => {
+    tabTextBtn.classList.add("active");
+    tabFileBtn.classList.remove("active");
+    textForm.classList.remove("hidden");
+    fileForm.classList.add("hidden");
+  });
+}
+
+// File Upload Form Submit
+if (fileForm) {
+  fileForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const btn = document.getElementById("kform-upload-btn");
+    const msgEl = document.getElementById("knowledge-form-msg");
+    btn.disabled = true;
+    btn.textContent = "Uploading & Vectorizing...";
+    msgEl.className = "form-feedback hidden";
+
+    try {
+      const formData = new FormData(fileForm);
+      const res = await apiFetch("/api/knowledge/ingest", {
+        method: "POST",
+        body: formData
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.detail || "Failed to ingest file.");
+      }
+
+      const data = await res.json();
+      msgEl.textContent = `Successfully ingested "${data.title}" into ${data.total_chunks} vector chunks!`;
+      msgEl.className = "form-feedback form-feedback--success";
+      fileForm.reset();
+      loadKnowledgeBase();
+    } catch (err) {
+      msgEl.textContent = "Ingestion failed: " + err.message;
+      msgEl.className = "form-feedback form-feedback--error";
+    } finally {
+      btn.disabled = false;
+      btn.textContent = "Ingest & Vectorize Document";
+    }
+  });
+}
+
+// Direct Text Form Submit
+if (textForm) {
+  textForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const btn = document.getElementById("ktext-submit-btn");
+    const msgEl = document.getElementById("knowledge-form-msg");
+    btn.disabled = true;
+    btn.textContent = "Vectorizing Text...";
+    msgEl.className = "form-feedback hidden";
+
+    try {
+      const formData = new FormData(textForm);
+      const payload = {
+        title: formData.get("title"),
+        content: formData.get("content"),
+        jurisdiction: formData.get("jurisdiction") || "Central",
+        source_authority: formData.get("source_authority"),
+        source_url: formData.get("source_url")
+      };
+
+      const res = await apiFetch("/api/knowledge/ingest-text", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.detail || "Failed to ingest text.");
+      }
+
+      const data = await res.json();
+      msgEl.textContent = `Successfully ingested "${data.title}" into ${data.total_chunks} vector chunks!`;
+      msgEl.className = "form-feedback form-feedback--success";
+      textForm.reset();
+      loadKnowledgeBase();
+    } catch (err) {
+      msgEl.textContent = "Ingestion failed: " + err.message;
+      msgEl.className = "form-feedback form-feedback--error";
+    } finally {
+      btn.disabled = false;
+      btn.textContent = "Ingest & Vectorize Text";
+    }
+  });
+}
+
 
